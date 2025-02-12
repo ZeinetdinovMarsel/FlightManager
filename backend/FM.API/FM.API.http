@@ -1,0 +1,6 @@
+@FM_HostAddress = https://localhost:5183
+
+GET {{FM_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
