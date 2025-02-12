@@ -4,7 +4,7 @@
 # БД
 ### Миграции
  Чтобы применить миграции нужно написать комманду из папки backend:
- * dotnet ef database update -s .\FM.API\ -p .\FM.API\
+ * dotnet ef database update -s .\FM.API\ -p .\FM.DataAccess\
 
 # Запуск сайта
 ### Бекенд
