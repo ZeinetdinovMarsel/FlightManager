@@ -6,138 +6,217 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Moq;
 
 namespace FM.API.Tests;
+
 public class AirportEndpointsTests
 {
-    private readonly Mock<IAirportService> _airportServiceMock;
-
-    public AirportEndpointsTests()
-    {
-        _airportServiceMock = new Mock<IAirportService>();
-    }
+    private readonly Mock<IAirportService> _airportServiceMock = new();
 
     [Fact]
     public async Task GetAirports_ShouldReturnOk_WhenAirportsExist()
     {
         var airports = new List<AirportModel>
-            {
-                AirportModel.Create(1, "Airport 1", "City 1", 1),
-                AirportModel.Create(2, "Airport 2", "City 2", 2)
-            };
-        _airportServiceMock.Setup(service => service.GetAllAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>()))
+        {
+            AirportModel.Create(1, "Airport 1", "City 1", 1),
+            AirportModel.Create(2, "Airport 2", "City 2", 2)
+        };
+
+        _airportServiceMock.Setup(service => service.GetAllAsync(
+            It.IsAny<string>(),
+            It.IsAny<bool>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<string>()))
             .ReturnsAsync(airports);
 
         var result = await AirportEndpoints.GetAirports(_airportServiceMock.Object);
 
         var okResult = Assert.IsType<Ok<IEnumerable<AirportModel>>>(result);
-        Assert.Equal(2, okResult.Value.Count());
+        Assert.Equal(2, okResult.Value?.Count());
     }
 
     [Fact]
-    public async Task GetAirportById_ShouldReturnOk_WhenAirportExists()
+    public async Task GetAirports_ShouldCallServiceWithCorrectParameters()
     {
-        var airport = AirportModel.Create(1, "Airport 1", "City 1", 1);
-        _airportServiceMock.Setup(service => service.GetByIdAsync(1))
-            .ReturnsAsync(airport);
+        const string sortBy = "Name";
+        const bool descending = true;
+        const int page = 2;
+        const int pageSize = 20;
+        const string filter = "test";
 
-        var result = await AirportEndpoints.GetAirportById(1, _airportServiceMock.Object);
+        await AirportEndpoints.GetAirports(
+            _airportServiceMock.Object,
+            sortBy,
+            descending,
+            page,
+            pageSize,
+            filter);
 
-        var okResult = Assert.IsType<Ok<AirportModel>>(result); 
-        Assert.Equal(1, okResult.Value.Id);
+        _airportServiceMock.Verify(x => x.GetAllAsync(
+            sortBy,
+            descending,
+            page,
+            pageSize,
+            filter),
+            Times.Once);
     }
 
     [Fact]
-    public async Task GetAirportById_ShouldReturnNotFound_WhenAirportDoesNotExist()
+    public async Task GetAirportById_ShouldReturnAirport_WhenExists()
     {
-        _airportServiceMock.Setup(service => service.GetByIdAsync(1))
-            .ReturnsAsync((AirportModel)null);
 
-        var result = await AirportEndpoints.GetAirportById(1, _airportServiceMock.Object);
-        
-        var notFoundResult = Assert.IsType<NotFound<string>>(result); 
+        const int id = 1;
+        var expectedAirport = AirportModel.Create(id, "Test", "City", 1);
+        _airportServiceMock.Setup(x => x.GetByIdAsync(id))
+            .ReturnsAsync(expectedAirport);
+
+        var result = await AirportEndpoints.GetAirportById(id, _airportServiceMock.Object);
+
+        var okResult = Assert.IsType<Ok<AirportModel>>(result);
+        Assert.Equal(expectedAirport, okResult.Value);
+        _airportServiceMock.Verify(x => x.GetByIdAsync(id), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAirportById_ShouldReturnNotFound_WhenNotExists()
+    {
+        const int id = 999;
+        _airportServiceMock.Setup(x => x.GetByIdAsync(id))
+            .ReturnsAsync((AirportModel)null!);
+
+        var result = await AirportEndpoints.GetAirportById(id, _airportServiceMock.Object);
+
+        var notFoundResult = Assert.IsType<NotFound<string>>(result);
         Assert.Equal("Аэропорт не найден", notFoundResult.Value);
     }
 
-
     [Fact]
-    public async Task CreateAirport_ShouldReturnCreated_WhenAirportIsCreated()
+    public async Task CreateAirport_ShouldReturnCreatedWithId_WhenSuccessful()
     {
         var request = new AirportRequest
         {
-            Name = "New Airport",
-            City = "New City",
+            Name = "New",
+            City = "City",
             FederalDistrictId = 1
         };
+        const int expectedId = 123;
 
-        _airportServiceMock.Setup(service => service.CreateAsync(request.Name, request.City, request.FederalDistrictId))
-            .ReturnsAsync(1);
+        _airportServiceMock.Setup(x => x.CreateAsync(
+            request.Name,
+            request.City,
+            request.FederalDistrictId))
+            .ReturnsAsync(expectedId);
 
         var result = await AirportEndpoints.CreateAirport(request, _airportServiceMock.Object);
 
         var createdResult = Assert.IsType<Created<int>>(result);
-        Assert.Equal("/airports/1", createdResult.Location);
+        Assert.Equal($"/airports/{expectedId}", createdResult.Location);
+        Assert.Equal(expectedId, createdResult.Value);
+
+        _airportServiceMock.Verify(x => x.CreateAsync(
+            request.Name,
+            request.City,
+            request.FederalDistrictId),
+            Times.Once);
     }
 
     [Fact]
-    public async Task UpdateAirport_ShouldReturnOk_WhenAirportIsUpdated()
+    public async Task UpdateAirport_ShouldReturnOk_WhenUpdateSuccessful()
     {
+        const int id = 1;
         var request = new AirportRequest
         {
-            Name = "Updated Airport",
-            City = "Updated City",
-            FederalDistrictId = 1
+            Name = "Updated",
+            City = "City",
+            FederalDistrictId = 2
         };
 
-        _airportServiceMock.Setup(service => service.UpdateAsync(1, request.Name, request.City, request.FederalDistrictId))
+        _airportServiceMock.Setup(x => x.UpdateAsync(
+            id,
+            request.Name,
+            request.City,
+            request.FederalDistrictId))
             .ReturnsAsync(true);
 
-        var result = await AirportEndpoints.UpdateAirport(1, request, _airportServiceMock.Object);
+        var result = await AirportEndpoints.UpdateAirport(id, request, _airportServiceMock.Object);
 
         var okResult = Assert.IsType<Ok<string>>(result);
         Assert.Equal("Аэропорт обновлён", okResult.Value);
+
+        _airportServiceMock.Verify(x => x.UpdateAsync(
+            id,
+            request.Name,
+            request.City,
+            request.FederalDistrictId),
+            Times.Once);
     }
 
     [Fact]
-    public async Task UpdateAirport_ShouldReturnNotFound_WhenAirportDoesNotExist()
+    public async Task UpdateAirport_ShouldReturnNotFound_WhenAirportNotExists()
     {
+        const int id = 999;
         var request = new AirportRequest
         {
-            Name = "Updated Airport",
-            City = "Updated City",
-            FederalDistrictId = 1
+            Name = "Updated",
+            City = "City",
+            FederalDistrictId = 2
         };
 
-        _airportServiceMock.Setup(service => service.UpdateAsync(1, request.Name, request.City, request.FederalDistrictId))
+        _airportServiceMock.Setup(x => x.UpdateAsync(
+            It.IsAny<int>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<int>()))
             .ReturnsAsync(false);
 
-        var result = await AirportEndpoints.UpdateAirport(1, request, _airportServiceMock.Object);
+        var result = await AirportEndpoints.UpdateAirport(id, request, _airportServiceMock.Object);
 
         var notFoundResult = Assert.IsType<NotFound<string>>(result);
-        var returnValue = Assert.IsType<string>(notFoundResult.Value);
         Assert.Equal("Аэропорт не найден", notFoundResult.Value);
     }
 
     [Fact]
-    public async Task DeleteAirport_ShouldReturnOk_WhenAirportIsDeleted()
+    public async Task DeleteAirport_ShouldReturnOk_WhenDeleteSuccessful()
     {
-        _airportServiceMock.Setup(service => service.DeleteAsync(1))
+        const int id = 1;
+        _airportServiceMock.Setup(x => x.DeleteAsync(id))
             .ReturnsAsync(true);
 
-        var result = await AirportEndpoints.DeleteAirport(1, _airportServiceMock.Object);
+        var result = await AirportEndpoints.DeleteAirport(id, _airportServiceMock.Object);
 
         var okResult = Assert.IsType<Ok<string>>(result);
-        var returnValue = Assert.IsType<string>(okResult.Value);
         Assert.Equal("Аэропорт удалён", okResult.Value);
+        _airportServiceMock.Verify(x => x.DeleteAsync(id), Times.Once);
     }
 
     [Fact]
-    public async Task DeleteAirport_ShouldReturnNotFound_WhenAirportDoesNotExist()
+    public async Task DeleteAirport_ShouldReturnNotFound_WhenAirportNotExists()
     {
-        _airportServiceMock.Setup(service => service.DeleteAsync(1))
+        const int id = 999;
+        _airportServiceMock.Setup(x => x.DeleteAsync(id))
             .ReturnsAsync(false);
-        var result = await AirportEndpoints.DeleteAirport(1, _airportServiceMock.Object);
 
-        var okResult = Assert.IsType<NotFound<string>>(result);
-        var returnValue = Assert.IsType<string>(okResult.Value);
-        Assert.Equal("Аэропорт не найден", okResult.Value);
+        var result = await AirportEndpoints.DeleteAirport(id, _airportServiceMock.Object);
+
+        var notFoundResult = Assert.IsType<NotFound<string>>(result);
+        Assert.Equal("Аэропорт не найден", notFoundResult.Value);
+    }
+
+    [Fact]
+    public async Task AnyEndpoint_ShouldReturnProblem_WhenServiceThrowsException()
+    {
+        const string errorMessage = "Test exception";
+        _airportServiceMock.Setup(x => x.GetAllAsync(
+            It.IsAny<string>(),
+            It.IsAny<bool>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<string>()))
+            .ThrowsAsync(new Exception(errorMessage));
+
+        var result = await AirportEndpoints.GetAirports(_airportServiceMock.Object);
+
+        var problemResult = Assert.IsType<ProblemHttpResult>(result);
+        Assert.NotNull(problemResult.ProblemDetails.Detail);
+        Assert.Equal(errorMessage, problemResult.ProblemDetails.Detail);
     }
 }
