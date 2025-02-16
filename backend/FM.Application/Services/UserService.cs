@@ -20,7 +20,7 @@ public class UsersService : IUsersService
     }
 
 
-    public async Task<Guid> Register(string userName, string email, string password, int role)
+    public async Task<Guid> SignUp(string userName, string email, string password, int role)
     {
         var existingUser = await _usersRepository.GetByEmail(email);
         if (existingUser != null)
@@ -41,7 +41,7 @@ public class UsersService : IUsersService
         return user.Id;
     }
 
-    public async Task<string> Login(string email, string password)
+    public async Task<string> SignIn(string email, string password)
     {
         var user = await _usersRepository.GetByEmail(email);
 

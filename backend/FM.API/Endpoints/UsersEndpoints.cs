@@ -7,11 +7,9 @@ public static class UsersEndpoints
 
     public static IEndpointRouteBuilder MapUsersEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("register", Register);
+        app.MapPost("signUp", SignUp);
 
-        app.MapPost("login", Login);
-
-        app.MapPost("logout", Logout);
+        app.MapPost("signIn", SignIn);
 
         app.MapGet("user", GetUserDetails).RequireAuthorization();
 
@@ -20,15 +18,15 @@ public static class UsersEndpoints
         app.MapGet("user/role", GetUserRole).RequireAuthorization();
         return app;
     }
-    private static async Task<IResult> Register(
-        RegisterUserRequest request,
+    private static async Task<IResult> SignUp(
+        SignUpUserRequest request,
         UsersService usersService)
     {
 
         try
         {
 
-            var userId = await usersService.Register(
+            var userId = await usersService.SignUp(
                 request.UserName,
                 request.Email,
                 request.Password,
@@ -42,24 +40,19 @@ public static class UsersEndpoints
 
     }
 
-    private static async Task<IResult> Login(
-        LoginUserRequest request,
+    private static async Task<IResult> SignIn(
+        SignInUserRequest request,
         UsersService usersService)
     {
         try
         {
-            var token = await usersService.Login(request.Email, request.Password);
+            var token = await usersService.SignIn(request.Email, request.Password);
             return Results.Ok(new { Token = token });
         }
         catch (Exception ex)
         {
             return Results.BadRequest(new { Message = ex.Message });
         }
-    }
-
-    private static IResult Logout()
-    {
-        return Results.Ok(new { Message = "Вы успешно вышли" });
     }
 
     private static async Task<IResult> GetUserDetails(

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 namespace FM.API.Contracts;
-public record RegisterUserRequest
+public record SignUpUserRequest
 (
     [Required] string UserName,
     [Required] string Password,

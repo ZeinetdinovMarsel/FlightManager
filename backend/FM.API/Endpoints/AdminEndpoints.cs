@@ -39,12 +39,12 @@ public static class AdminEndpoints
 
 
     private static async Task<IResult> CreateUser(
-        RegisterUserRequest request,
+        SignUpUserRequest request,
         UsersService usersService)
     {
         try
         {
-            var userId = await usersService.Register(
+            var userId = await usersService.SignUp(
                 request.UserName,
                 request.Email,
                 request.Password,
