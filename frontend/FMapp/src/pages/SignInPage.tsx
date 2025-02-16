@@ -16,7 +16,7 @@ export default function SignInPage() {
     e.preventDefault();
     try {
       const { token, refreshToken } = await signInUser(email, password);
-      useAuthStore.getState().signIn(token, refreshToken);
+      useAuthStore.getState().signIn(token, refreshToken, 60);
     } catch (err: any) {
       setError(err.message);
     }
@@ -51,16 +51,16 @@ export default function SignInPage() {
                 required
               />
             </Grid>
-          
-          {error && <Typography color="error" variant="body2" sx={{ marginTop: 2 }}>{error}</Typography>}
-          <Grid item xs={12}>
-            <Button fullWidth variant="contained" color="primary" type="submit">{t("signIn")}</Button>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography align="center">
-              {t("noAccount")} <Link to="/signUp">{t("signUp")}</Link>
-            </Typography>
-          </Grid>
+
+            {error && <Typography color="error" variant="body2" sx={{ marginTop: 2 }}>{error}</Typography>}
+            <Grid item xs={12}>
+              <Button fullWidth variant="contained" color="primary" type="submit">{t("signIn")}</Button>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography align="center">
+                {t("noAccount")} <Link to="/signUp">{t("signUp")}</Link>
+              </Typography>
+            </Grid>
           </Grid>
         </form>
       </Box>

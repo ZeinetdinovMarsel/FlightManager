@@ -5,6 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Security.Claims;
 using FM.Core.Abstractions;
+using System.Security.Cryptography;
 
 namespace FM.Infrastructure;
 public class JwtProvider : IJwtProvider
@@ -16,7 +17,7 @@ public class JwtProvider : IJwtProvider
         _options = options.Value;
     }
 
-    public string GenerateToken(UserModel user)
+    public async Task<string> GenerateActivateToken(UserModel user)
     {
         Claim[] claims = new[]
         {
@@ -30,7 +31,27 @@ public class JwtProvider : IJwtProvider
         var token = new JwtSecurityToken(
             claims: claims,
             signingCredentials: signingCredentials,
-            expires: DateTime.UtcNow.AddHours(_options.ExpiredHours));
+            expires: DateTime.UtcNow.AddMinutes(_options.ActivationTokenExpiredMinutes));
+
+        var tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
+
+        return tokenValue;
+    }
+    public async Task<string> GenerateRefreshToken(UserModel user)
+    {
+        Claim[] claims = new[]
+        {
+                new Claim(CustomClaims.UserId, user.Id.ToString())
+            };
+
+        var signingCredentials = new SigningCredentials(
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey)),
+            SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            claims: claims,
+            signingCredentials: signingCredentials,
+            expires: DateTime.UtcNow.AddHours(_options.RefreshTokenExpiredHours));
 
         var tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
 

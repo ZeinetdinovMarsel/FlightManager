@@ -1,7 +1,5 @@
-import axios from "axios";
-import { useAuthStore } from "../store/auth"; 
-
-const API_URL = "http://localhost:5183/";
+import axiosInstance from "../utils/axiosInstance";
+import { useAuthStore } from "../store/auth";
 
 interface SignInResponse {
   token: string;
@@ -19,7 +17,7 @@ export const signUpUser = async (
   role: number
 ): Promise<SignUpResponse> => {
   try {
-    const response = await axios.post<SignUpResponse>(`${API_URL}signUp`, {
+    const response = await axiosInstance.post<SignUpResponse>(`signUp`, {
       userName,
       email,
       password,
@@ -36,11 +34,10 @@ export const signInUser = async (
   password: string
 ): Promise<SignInResponse> => {
   try {
-    const response = await axios.post<SignInResponse>(`${API_URL}signIn`, { email, password });
-    
+    const response = await axiosInstance.post<SignInResponse>(`signIn`, { email, password });
+
     const { token, refreshToken } = response.data;
-    const signIn = useAuthStore.getState().signIn;
-    signIn(token, refreshToken);
+    useAuthStore.getState().signIn(token, refreshToken,900);
 
     return response.data;
   } catch (err: any) {

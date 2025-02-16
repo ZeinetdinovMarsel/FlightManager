@@ -1,8 +1,9 @@
 ﻿using FM.Core.Models;
 
-namespace FM.Core.Abstractions;
+namespace FM.Infrastructure;
 public interface IJwtProvider
 {
-    string GenerateToken(UserModel user);
+    Task<string> GenerateActivateToken(UserModel user);
+    Task<string> GenerateRefreshToken(UserModel user);
     Guid ValidateToken(string token);
 }

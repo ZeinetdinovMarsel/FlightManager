@@ -67,7 +67,8 @@ public static class AdminEndpoints
                 request.UserId,
                 request.UserName,
                 request.Password,
-                request.Email);
+                request.Email,
+                "");
 
             var userId = await adminService.UpdateUser(request.UserId, user, request.Role);
 

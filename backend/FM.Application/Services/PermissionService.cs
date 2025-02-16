@@ -1,5 +1,6 @@
 ﻿using FM.Core.Abstractions;
 using FM.Core.Enums;
+using FM.DataAccess.Repositories;
 
 namespace FM.Application;
 
@@ -14,6 +15,6 @@ public class PermissionService :  IPermissionService
     public Task<HashSet<Permission>> GetPermissionsAsync(Guid userId)
     {
 
-        return _usersRepository.GetUserPermissions(userId);
+        return _usersRepository.GetUserPermissionsAsync(userId);
     }
 }

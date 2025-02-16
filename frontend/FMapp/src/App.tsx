@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Routes, Route, Navigate, Link } from "react-router-dom";
 import { useAuthStore } from "./store/auth";
-import { AppBar, Toolbar, Typography, Button, useMediaQuery, Box, IconButton, Menu, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, useMediaQuery, Box, IconButton, Menu, MenuItem, Select } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useTranslation } from "react-i18next";

@@ -1,4 +1,5 @@
 ﻿namespace FM.DataAccess.Entities;
+
 public class UserEntity
 {
     public Guid Id { get; set; }
@@ -9,6 +10,7 @@ public class UserEntity
 
     public string Email { get; set; } = string.Empty;
 
+    public string RefreshToken { get; set; } = string.Empty;
+
     public ICollection<RoleEntity> Roles { get; set; } = [];
 }
-

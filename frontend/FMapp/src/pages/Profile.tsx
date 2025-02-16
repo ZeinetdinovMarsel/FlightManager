@@ -1,4 +1,3 @@
-// src/pages/Profile.tsx (Личный кабинет)
 import { useAuthStore } from "../store/auth";
 
 export default function Profile() {

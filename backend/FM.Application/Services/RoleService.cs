@@ -1,5 +1,6 @@
 ﻿using FM.Core.Abstractions;
 using FM.Core.Enums;
+using FM.DataAccess.Repositories;
 
 namespace FM.Application;
 
@@ -14,6 +15,6 @@ public class RoleService : IRoleService
     public Task<List<Role>> GetRolesAsync(Guid userId)
     {
 
-        return _usersRepository.GetUserRoles(userId);
+        return _usersRepository.GetUserRolesAsync(userId);
     }
 }

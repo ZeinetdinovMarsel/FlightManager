@@ -4,6 +4,7 @@ using FM.Core.Abstractions;
 using FM.Core.Enums;
 using System.Data;
 using FM.Core.Models;
+
 namespace FM.DataAccess.Repositories;
 public class UsersRepository : IUsersRepository
 {
@@ -12,20 +13,20 @@ public class UsersRepository : IUsersRepository
     public UsersRepository(FMDbContext context)
     {
         _context = context;
-
     }
-    public async Task Add(UserModel user, int role)
+
+    public async Task AddAsync(UserModel user, int role)
     {
-        var roleEntity = await _context.Roles
-            .SingleOrDefaultAsync(r => r.Id == role)
+        var roleEntity = await _context.Roles.FindAsync(role)
             ?? throw new InvalidOperationException("Роль не найдена");
 
-        var userEntity = new UserEntity()
+        var userEntity = new UserEntity
         {
             Id = user.Id,
             UserName = user.UserName,
             PasswordHash = user.PasswordHash,
             Email = user.Email,
+            RefreshToken = user.RefreshToken,
             Roles = [roleEntity]
         };
 
@@ -33,34 +34,69 @@ public class UsersRepository : IUsersRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<UserModel> GetByEmail(string email)
+    public async Task<UserModel?> GetByEmailAsync(string email)
     {
-        var userEntity = await _context.Users
-        .AsNoTracking()
-        .FirstOrDefaultAsync(u => u.Email == email);
+        var userEntity = await _context.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email == email);
+        if (userEntity == null) {
+            throw new Exception("Пользователь не найден");
+        }
 
-        if (userEntity == null) return null;
-
-        UserModel user = UserModel.Create(userEntity.Id, userEntity.UserName, userEntity.PasswordHash, email);
-
-        return user;
-    }
-    public async Task<UserModel> GetById(Guid Id)
-    {
-
-        var userEntity = await _context.Users
-       .AsNoTracking()
-       .FirstOrDefaultAsync(u => u.Id == Id);
-
-        if (userEntity == null) return null;
-
-        UserModel user = UserModel.Create(userEntity.Id, userEntity.UserName, userEntity.PasswordHash, userEntity.Email);
-
-        return user;
+        return MapToModel(userEntity);
     }
 
+    public async Task<UserModel> GetByIdAsync(Guid id)
+    {
+        var userEntity = await _context.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == id);
+        if (userEntity == null)
+            throw new Exception("Пользователь не найден");
+        return MapToModel(userEntity);
+    }
 
-    public async Task<HashSet<Permission>> GetUserPermissions(Guid userId)
+    public async Task<UserModel?> GetUserByRefreshTokenAsync(string refreshToken)
+    {
+        var userEntity = await _context.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+
+        return userEntity != null ? MapToModel(userEntity) : null;
+    }
+
+    public async Task UpdateRefreshTokenAsync(Guid userId, string refreshToken)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return;
+
+        user.RefreshToken = refreshToken;
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task RevokeRefreshTokenAsync(Guid userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return;
+
+        user.RefreshToken = null;
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<UserModel>> GetUsersAsync()
+    {
+        var users = await _context.Users.AsNoTracking().ToListAsync();
+        return users.Select(MapToModel).ToList();
+    }
+
+    public async Task<List<UserModel>> GetUsersByRoleAsync(int role)
+    {
+        var users = await _context.Users.AsNoTracking()
+            .Where(u => u.Roles.Any(r => r.Id == role))
+            .ToListAsync();
+
+        return users.Select(MapToModel).ToList();
+    }
+    public async Task<HashSet<Permission>> GetUserPermissionsAsync(Guid userId)
     {
         var roles = await _context.Users
             .AsNoTracking()
@@ -76,44 +112,41 @@ public class UsersRepository : IUsersRepository
             .Select(p => (Permission)p.Id)
             .ToHashSet();
     }
-    public async Task<List<UserModel>> GetUsers()
-
+    public async Task<List<Role>> GetUserRolesAsync(Guid userId)
     {
-        var userEntitites = await _context.Users
-            .AsNoTracking()
-            .ToListAsync();
-
-        var Users = userEntitites
-            .Select(u => UserModel.Create(u.Id, u.UserName, u.PasswordHash, u.Email))
-            .ToList();
-
-        return Users;
-    }
-
-    public async Task<List<UserModel>> GetUsersByRole(int role)
-    {
-        var userEntitites = await _context.Users
-            .AsNoTracking()
-            .Where(u => u.Roles.Any(r => r.Id == role))
-            .ToListAsync();
-
-        var Users = userEntitites
-                .Select(u => UserModel.Create(u.Id, u.UserName, u.PasswordHash, u.Email))
-                .ToList();
-
-        return Users;
-    }
-
-    public async Task<List<Role>> GetUserRoles(Guid userId)
-    {
-        var userRoles = await _context.Users
-            .AsNoTracking()
-            .Include(u => u.Roles)
+        return await _context.Users.AsNoTracking()
             .Where(u => u.Id == userId)
             .SelectMany(u => u.Roles)
             .Select(r => Enum.Parse<Role>(r.Name))
             .ToListAsync();
+    }
 
-        return userRoles;
+    private static UserModel MapToModel(UserEntity entity)
+    {
+        return UserModel.Create(
+            entity.Id,
+            entity.UserName,
+            entity.PasswordHash,
+            entity.Email,
+            entity.RefreshToken
+        );
+    }
+
+    public async Task UpdateUser(UserModel? user)
+    {
+        if (user == null)
+            throw new Exception("Пользователя нет");
+        var userEntity = await _context.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == user.Id);
+        if (userEntity == null)
+            throw new Exception("Пользователь не найден");
+        userEntity.Email = user.Email;
+        userEntity.UserName = user.UserName;
+        userEntity.PasswordHash = user.PasswordHash;
+        userEntity.RefreshToken = user.RefreshToken;
+
+        await _context.SaveChangesAsync();
     }
 }
+
+

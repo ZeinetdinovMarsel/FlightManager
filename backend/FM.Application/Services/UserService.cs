@@ -1,28 +1,27 @@
 ﻿using FM.Core.Abstractions;
 using FM.Core.Enums;
 using FM.Core.Models;
+using FM.DataAccess.Repositories;
+using FM.Infrastructure;
 
 namespace FM.Application.Services;
 
 public class UsersService : IUsersService
 {
-
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUsersRepository _usersRepository;
     private readonly IJwtProvider _jwtProvider;
-    public UsersService(IUsersRepository usersRepository, IPasswordHasher passwordHasher, IJwtProvider jwtProvider)
 
+    public UsersService(IUsersRepository usersRepository, IPasswordHasher passwordHasher, IJwtProvider jwtProvider)
     {
         _usersRepository = usersRepository;
         _passwordHasher = passwordHasher;
         _jwtProvider = jwtProvider;
-
     }
-
 
     public async Task<Guid> SignUp(string userName, string email, string password, int role)
     {
-        var existingUser = await _usersRepository.GetByEmail(email);
+        var existingUser = await _usersRepository.GetByEmailAsync(email);
         if (existingUser != null)
         {
             throw new InvalidOperationException("Почта уже занята");
@@ -34,52 +33,81 @@ public class UsersService : IUsersService
             Guid.NewGuid(),
             userName,
             hashedPassword,
-            email);
+            email,
+            "");
 
-        await _usersRepository.Add(user, role);
+        await _usersRepository.AddAsync(user, role);
 
         return user.Id;
     }
 
-    public async Task<string> SignIn(string email, string password)
+    public async Task<(string,string)> SignIn(string email, string password)
     {
-        var user = await _usersRepository.GetByEmail(email);
+
+
+        var user = await _usersRepository.GetByEmailAsync(email);
 
         if (user == null)
         {
             throw new Exception("Пользователь не найден");
         }
-        var result = _passwordHasher.Verify(password, user.PasswordHash);
 
+        var result = _passwordHasher.Verify(password, user.PasswordHash);
         if (!result)
         {
-            throw new Exception("Не правильный пароль");
+            throw new Exception("Неправильный пароль");
         }
-
-
-        var token = _jwtProvider.GenerateToken(user);
-        return token;
+        string refreshToken = await _jwtProvider.GenerateRefreshToken(user);
+        await _usersRepository.UpdateRefreshTokenAsync(user.Id, refreshToken);
+        return ( await _jwtProvider.GenerateActivateToken(user), refreshToken);
     }
+
     public async Task<UserModel> GetUserFromToken(string token)
     {
         Guid userId = _jwtProvider.ValidateToken(token);
-
-        var user = await _usersRepository.GetById(userId);
-
-        return user;
+        return await _usersRepository.GetByIdAsync(userId);
     }
 
     public async Task<List<UserModel>> GetAllUsersByRole(int role)
     {
-        return await _usersRepository.GetUsersByRole(role);
+        return await _usersRepository.GetUsersByRoleAsync(role);
     }
 
     public async Task<List<UserModel>> GetAllUsers()
     {
-        return await _usersRepository.GetUsers();
+        return await _usersRepository.GetUsersAsync();
     }
+
     public async Task<Role> GetUserRole(Guid id)
     {
-        return (await _usersRepository.GetUserRoles(id))[0];
+        return (await _usersRepository.GetUserRolesAsync(id))[0];
+    }
+
+    public async Task<UserModel> ValidateRefreshTokenAsync(string refreshToken)
+    {
+        var user = await _usersRepository.GetUserByRefreshTokenAsync(refreshToken);
+
+        if (user == null || user.RefreshToken != refreshToken)
+        {
+            return null;
+        }
+
+        return user;
+    }
+
+    public async Task UpdateRefreshTokenAsync(Guid userId, string newRefreshToken)
+    {
+        var user = await _usersRepository.GetByIdAsync(userId);
+
+        user?.UpdateRefreshToken(newRefreshToken);
+        await _usersRepository.UpdateUser(user);
+    }
+
+    public async Task<string> GenerateActivateToken(UserModel user)
+    {
+        return await _jwtProvider.GenerateActivateToken(user);
+    }public async Task<string> GenerateRefreshToken(UserModel user)
+    {
+        return await _jwtProvider.GenerateRefreshToken(user);
     }
 }

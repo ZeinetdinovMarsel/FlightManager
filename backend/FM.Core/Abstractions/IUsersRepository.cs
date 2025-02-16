@@ -1,14 +1,18 @@
 ﻿using FM.Core.Enums;
 using FM.Core.Models;
 
-namespace FM.Core.Abstractions;
+namespace FM.DataAccess.Repositories;
 public interface IUsersRepository
 {
-    Task Add(UserModel user, int role);
-    Task<UserModel> GetByEmail(string email);
-    Task<UserModel> GetById(Guid Id);
-    Task<List<UserModel>> GetUsersByRole(int role);
-    Task<List<UserModel>> GetUsers();
-    Task<HashSet<Permission>> GetUserPermissions(Guid userId);
-    Task<List<Role>> GetUserRoles(Guid userId);
+    Task AddAsync(UserModel user, int role);
+    Task<UserModel?> GetByEmailAsync(string email);
+    Task<UserModel> GetByIdAsync(Guid id);
+    Task<UserModel?> GetUserByRefreshTokenAsync(string refreshToken);
+    Task<HashSet<Permission>> GetUserPermissionsAsync(Guid userId);
+    Task<List<Role>> GetUserRolesAsync(Guid userId);
+    Task<List<UserModel>> GetUsersAsync();
+    Task<List<UserModel>> GetUsersByRoleAsync(int role);
+    Task RevokeRefreshTokenAsync(Guid userId);
+    Task UpdateRefreshTokenAsync(Guid userId, string refreshToken);
+    Task UpdateUser(UserModel? user);
 }
