@@ -53,7 +53,7 @@ public static class AdminEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(ex.Message);
         }
     }
 
@@ -76,7 +76,7 @@ public static class AdminEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(ex.Message);
         }
     }
 
@@ -90,7 +90,7 @@ public static class AdminEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(ex.Message);
         }
 
     }

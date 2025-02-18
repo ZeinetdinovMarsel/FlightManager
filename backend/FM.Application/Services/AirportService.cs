@@ -11,9 +11,9 @@ public class AirportService : IAirportService
         _airportRepository = airportRepository;
     }
 
-    public async Task<IEnumerable<AirportModel>> GetAllAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? filter = null)
+    public async Task<IEnumerable<AirportModel>> GetAllAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? cityFilter = null, string? nameFilter = null, int? federalDistrictIdFilter = null)
     {
-        return await _airportRepository.GetAllAsync(sortBy, descending, page, pageSize, filter);
+        return await _airportRepository.GetAllAsync(sortBy, descending, page, pageSize, cityFilter, nameFilter,federalDistrictIdFilter);
     }
 
     public async Task<AirportModel?> GetByIdAsync(int id)

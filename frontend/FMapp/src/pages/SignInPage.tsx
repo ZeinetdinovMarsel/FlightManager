@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Typography, Container, Box, Grid } from "@mui/material";
-import { signInUser } from "../services/authService";
-import { useAuthStore } from "../store/auth";
+import { signInUser } from "../api/auth";
+import { useAuthStore } from "../services/authService";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 

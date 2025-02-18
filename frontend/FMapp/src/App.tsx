@@ -1,37 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, Link } from "react-router-dom";
-import { useAuthStore } from "./store/auth";
-import { AppBar, Toolbar, Typography, Button, useMediaQuery, Box, IconButton, Menu, MenuItem, Select } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import MenuIcon from "@mui/icons-material/Menu";
+import { useAuthStore } from "./services/authService";
+import { AppBar, Toolbar, Typography, Button, Box, MenuItem, Select } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { useSettingsStore } from "./store/settings";
 import SignUpPage from "./pages/SignUpPage";
 import SignInPage from "./pages/SignInPage";
-import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import AirportsPage from "./pages/AirportsPage";
+import FederalDistrictPage from "./pages/FederalDistrictPage";
 
 
 export default function App() {
-  const { t, i18n } = useTranslation();
+  const settings = useSettingsStore();
+  const { t } = useTranslation();
   const isAuthenticated = useAuthStore((state) => state.token);
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const signOut = useAuthStore((state) => state.signOut);
+  const [language, setLanguage] = useState(settings.language);
 
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [language, setLanguage] = useState(i18n.language);
 
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  useEffect(() => {
+    setLanguage(settings.language);
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
+  }, [settings]);
   const handleLanguageChange = (event) => {
-    setLanguage(event.target.value);
-    i18n.changeLanguage(event.target.value);
+    settings.setLanguage(event.target.value);
   };
 
   const handleSignOut = () => {
@@ -60,70 +53,52 @@ export default function App() {
             <MenuItem value="ru">Русский</MenuItem>
           </Select>
 
-          {isSmallScreen ? (
-            <Box>
-              <IconButton color="inherit" onClick={handleMenuOpen}>
-                <MenuIcon />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-              >
-                <MenuItem component={Link} to="/signIn" onClick={handleMenuClose}>
+
+          <Box>
+            {isAuthenticated ? (
+              <>
+                <Button color="inherit" component={Link} to="/flights">
+                  {t("flights")}
+                </Button>
+                <Button color="inherit" component={Link} to="/airports">
+                  {t("airports")}
+                </Button>
+                <Button color="inherit" component={Link} to="/federalDistricts">
+                  {t("federalDistricts")}
+                </Button>
+                <Button color="inherit" component={Link} to="/dashboard">
+                  {t("dashboard")}
+                </Button>
+                <Button color="inherit" component={Link} to="/profile">
+                  {t("profile")}
+                </Button>
+                <Button color="inherit" onClick={handleSignOut}>
+                  {t("signOut")}
+                </Button>
+
+              </>
+            ) : (
+              <>
+                <Button color="inherit" component={Link} to="/signIn">
                   {t("signIn")}
-                </MenuItem>
-                {isAuthenticated && (
-                  <>
-                    <MenuItem component={Link} to="/dashboard" onClick={handleMenuClose}>
-                      {t("dashboard")}
-                    </MenuItem>
-                    <MenuItem component={Link} to="/profile" onClick={handleMenuClose}>
-                      {t("profile")}
-                    </MenuItem>
-                    <MenuItem onClick={handleSignOut}>
-                      {t("signOut")}
-                    </MenuItem>
-                  </>
-                )}
-              </Menu>
-            </Box>
-          ) : (
-            <Box>
-              {isAuthenticated ? (
-                <>
-                  <Button color="inherit" component={Link} to="/dashboard">
-                    {t("dashboard")}
-                  </Button>
-                  <Button color="inherit" component={Link} to="/profile">
-                    {t("profile")}
-                  </Button>
-                  <Button color="inherit" onClick={handleSignOut}>
-                    {t("signOut")}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button color="inherit" component={Link} to="/signIn">
-                    {t("signIn")}
-                  </Button>
-                  <Button color="inherit" component={Link} to="/signUp">
-                    {t("signUp")}
-                  </Button>
-                </>
-              )}
-            </Box>
-          )}
+                </Button>
+                <Button color="inherit" component={Link} to="/signUp">
+                  {t("signUp")}
+                </Button>
+              </>
+            )}
+          </Box>
         </Toolbar>
       </AppBar>
 
-      
+
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" />}/>
-        <Route path="/signIn" element={!isAuthenticated ? <SignInPage /> : <Navigate to="/dashboard" />} />
-        <Route path="/signUp" element={!isAuthenticated ? <SignUpPage /> : <Navigate to="/" />} />
-        <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/signIn" />} />
+        <Route path="/" element={<Navigate to="/profile" />} />
+        <Route path="/signIn" element={!isAuthenticated ? <SignInPage /> : <Navigate to="/profile" />} />
+        <Route path="/signUp" element={!isAuthenticated ? <SignUpPage /> : <Navigate to="/profile" />} />
         <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/signIn" />} />
+        <Route path="/airports" element={isAuthenticated ? <AirportsPage /> : <Navigate to="/signIn" />} />
+        <Route path="/federalDistricts" element={isAuthenticated ? <FederalDistrictPage /> : <Navigate to="/signIn" />} />
       </Routes>
     </div>
   );

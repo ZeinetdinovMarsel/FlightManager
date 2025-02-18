@@ -44,7 +44,11 @@ public static class UsersEndpoints
         try
         {
             (var activateToken, var refreshToken) = await usersService.SignIn(request.Email, request.Password);
-            return Results.Ok(new { Token = activateToken, RefreshToken = refreshToken });
+            return Results.Ok(new TokenResponse
+            {
+                Token = activateToken,
+                RefreshToken = refreshToken
+            });
         }
         catch (Exception ex)
         {
@@ -69,9 +73,12 @@ public static class UsersEndpoints
 
             await usersService.UpdateRefreshTokenAsync(user.Id, request.RefreshToken);
 
-            return Results.Ok(new
+
+
+
+            return Results.Ok(new TokenResponse
             {
-                AccessToken = newAccessToken,
+                Token = newAccessToken,
                 RefreshToken = request.RefreshToken
             });
         }

@@ -12,9 +12,9 @@ public class FederalDistrictService : IFederalDistrictService
         _repository = repository;
     }
 
-    public async Task<IEnumerable<FederalDistrictModel>> GetAllFederalDistricts(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? filter = null)
+    public async Task<IEnumerable<FederalDistrictModel>> GetAllFederalDistricts(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? namefilter = null)
     {
-        return await _repository.GetAllAsync(sortBy, descending, page, pageSize, filter);
+        return await _repository.GetAllAsync(sortBy, descending, page, pageSize, namefilter);
     }
 
     public async Task<FederalDistrictModel?> GetFederalDistrictById(int id)

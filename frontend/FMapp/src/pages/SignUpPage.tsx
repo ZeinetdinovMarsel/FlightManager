@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { TextField, Button, Grid, Box, Typography } from "@mui/material";
-import { signUpUser } from "../services/authService";
+import { signUpUser } from "../api/auth";
 
 export default function SignUpPage() {
   const { t } = useTranslation();

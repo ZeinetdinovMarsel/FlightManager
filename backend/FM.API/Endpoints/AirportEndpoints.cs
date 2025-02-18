@@ -22,11 +22,11 @@ public static class AirportEndpoints
     }
 
     public static async Task<IResult> GetAirports(IAirportService service,
-      string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? filter = null)
+      string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? cityFilter = null, string? nameFilter = null, int? federalDistrictIdFilter = null)
     {
         try
         {
-            var airports = await service.GetAllAsync(sortBy, descending, page, pageSize, filter);
+            var airports = await service.GetAllAsync(sortBy, descending, page, pageSize, cityFilter,nameFilter,federalDistrictIdFilter);
             return Results.Ok(airports);
         }
         catch (Exception ex)
@@ -47,7 +47,7 @@ public static class AirportEndpoints
         }
         catch (Exception ex)
         {
-            return Results.Problem(ex.Message);
+            return Results.NotFound(ex.Message);
         }
     }
 
@@ -60,7 +60,7 @@ public static class AirportEndpoints
         }
         catch (Exception ex)
         {
-            return Results.Problem(ex.Message);
+            return Results.NotFound(ex.Message);
         }
     }
 
@@ -75,7 +75,7 @@ public static class AirportEndpoints
         }
         catch (Exception ex)
         {
-            return Results.Problem(ex.Message);
+            return Results.BadRequest(ex.Message);
         }
     }
 

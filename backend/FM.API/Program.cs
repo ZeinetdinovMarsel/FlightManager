@@ -69,6 +69,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddHttpClient();
+
 var app = builder.Build();
 
 app.UseCors(options =>
@@ -83,6 +85,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<UnauthorizedExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 

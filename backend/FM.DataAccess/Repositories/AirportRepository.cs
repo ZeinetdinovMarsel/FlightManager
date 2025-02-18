@@ -11,21 +11,34 @@ public class AirportRepository : IAirportRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<AirportModel>> GetAllAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? filter = null)
+    public async Task<IEnumerable<AirportModel>> GetAllAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? cityFilter = null, string? nameFilter = null, int? federalDistrictIdFilter = null)
     {
         var query = _context.Airports.AsQueryable();
 
-        if (!string.IsNullOrEmpty(filter))
+        if (!string.IsNullOrEmpty(nameFilter))
         {
-            query = query.Where(a => a.Name.Contains(filter) || a.City.Contains(filter));
+            query = query.Where(a => a.Name.Contains(nameFilter));
+        }
+
+        if (!string.IsNullOrEmpty(cityFilter))
+        {
+            query = query.Where(a => a.City.Contains(cityFilter));
+        }
+
+        if (federalDistrictIdFilter.HasValue)
+        {
+            query = query.Where(a => a.FederalDistrictId == federalDistrictIdFilter.Value);
         }
 
         if (!string.IsNullOrEmpty(sortBy))
         {
             query = sortBy.ToLower() switch
             {
+                "id" => descending ? query.OrderByDescending(a => a.Id) : query.OrderBy(a => a.Id),
                 "name" => descending ? query.OrderByDescending(a => a.Name) : query.OrderBy(a => a.Name),
                 "city" => descending ? query.OrderByDescending(a => a.City) : query.OrderBy(a => a.City),
+                "federaldistrict" => descending ? query.OrderByDescending(a => a.FederalDistrict.Name) : query.OrderBy(a => a.FederalDistrict.Name),
+
                 _ => query
             };
         }
@@ -55,6 +68,11 @@ public class AirportRepository : IAirportRepository
         if (existingDistrict == null)
         {
             throw new Exception("Округа с таким id не существует");
+        }
+
+        if (city == "" || name=="")
+        {
+            throw new Exception("Поля не должны быть пустыми");
         }
 
         var existingAirport = await _context.Airports

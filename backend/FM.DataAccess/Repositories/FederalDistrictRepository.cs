@@ -12,19 +12,20 @@ public class FederalDistrictRepository : IFederalDistrictRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<FederalDistrictModel>> GetAllAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? filter = null)
+    public async Task<IEnumerable<FederalDistrictModel>> GetAllAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? namefilter = null)
     {
         var query = _context.FederalDistricts.AsQueryable();
 
-        if (!string.IsNullOrEmpty(filter))
+        if (!string.IsNullOrEmpty(namefilter))
         {
-            query = query.Where(d => d.Name.Contains(filter));
+            query = query.Where(d => d.Name.Contains(namefilter));
         }
 
         if (!string.IsNullOrEmpty(sortBy))
         {
             query = sortBy.ToLower() switch
             {
+                "id" => descending ? query.OrderByDescending(d => d.Id) : query.OrderBy(d => d.Id),
                 "name" => descending ? query.OrderByDescending(d => d.Name) : query.OrderBy(d => d.Name),
                 _ => query
             };
@@ -53,7 +54,7 @@ public class FederalDistrictRepository : IFederalDistrictRepository
         {
             Name = name
         };
-
+        
         var existingDistrict = await _context.FederalDistricts
             .FirstOrDefaultAsync(d => d.Name == name);
 
