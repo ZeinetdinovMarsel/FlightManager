@@ -25,6 +25,7 @@ builder.Services.AddScoped<IFederalDistrictService, FederalDistrictService>();
 builder.Services.AddScoped<IAirportService, AirportService>();
 builder.Services.AddScoped<FlightService>();
 builder.Services.AddScoped<TicketService>();
+builder.Services.AddScoped<IServiceService, ServiceService>();
 
 builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
@@ -32,6 +33,7 @@ builder.Services.AddScoped<IFederalDistrictRepository, FederalDistrictRepository
 builder.Services.AddScoped<IAirportRepository, AirportRepository>();
 builder.Services.AddScoped<IFlightRepository, FlightRepository>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(nameof(JwtOptions)));
 builder.Services.Configure<AuthorizationOptions>(builder.Configuration.GetSection(nameof(AuthorizationOptions)));

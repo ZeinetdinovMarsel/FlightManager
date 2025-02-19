@@ -20,6 +20,7 @@ public static class ApiExtentions
         app.MapAirportEndpoints();
         app.MapFlightEndpoints();
         app.MapTicketEndpoints();
+        app.MapServiceEndpoints();
     }
     public static IServiceCollection AddApiAuthentification(this IServiceCollection services, IConfiguration configuration)
     {

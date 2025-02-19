@@ -33,7 +33,7 @@ public static class UsersEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest( ex.Message );
         }
     }
 
@@ -52,7 +52,7 @@ public static class UsersEndpoints
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest( ex.Message);
         }
     }
 
@@ -84,7 +84,7 @@ public static class UsersEndpoints
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest( ex.Message);
         }
     }
 
@@ -100,13 +100,13 @@ public static class UsersEndpoints
 
             var user = await usersService.GetUserFromToken(token);
             if (user == null)
-                return Results.NotFound(new { Message = "Пользователь не найден" });
+                return Results.NotFound("Пользователь не найден" );
 
             return Results.Ok(user);
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(ex.Message);
         }
     }
 

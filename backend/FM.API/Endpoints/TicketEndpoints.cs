@@ -19,16 +19,25 @@ public static class TicketEndpoints
     }
 
     private static async Task<IResult> GetTickets(TicketService service,
-        string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? filter = null)
+    string? sortBy = null,
+    bool descending = false,
+    int page = 1,
+    int pageSize = 10,
+    int? ticketTypeFilter = null,
+    float? priceFilter = null,
+    string? seatFilter = null,
+    int? flightIdFilter = null,
+    int[]? serviceIdsFilter = null
+)
     {
         try
         {
-            var tickets = await service.GetAllTicketsAsync(sortBy, descending, page, pageSize, filter);
+            var tickets = await service.GetAllTicketsAsync(sortBy, descending, page, pageSize, ticketTypeFilter, priceFilter, seatFilter, flightIdFilter,serviceIdsFilter);
             return Results.Ok(tickets);
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(ex.Message);
         }
     }
 
@@ -42,7 +51,7 @@ public static class TicketEndpoints
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(ex.Message);
         }
     }
 
@@ -56,7 +65,7 @@ public static class TicketEndpoints
                 request.Price,
                 request.Seat,
                 request.FlightId,
-                request.Services.Select(s => TicketServiceModel.Create(s.Id, s.ServiceName, s.ServiceCost)).ToList()
+                request.Services.Select(s => TicketServiceModel.Create(0, s.ServiceId, 0)).ToList()
             );
 
             var ticketId = await service.CreateTicketAsync(ticketModel);
@@ -64,7 +73,7 @@ public static class TicketEndpoints
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(ex.Message);
         }
     }
 
@@ -78,15 +87,15 @@ public static class TicketEndpoints
                 request.Price,
                 request.Seat,
                 request.FlightId,
-                request.Services.Select(s => TicketServiceModel.Create(s.Id, s.ServiceName, s.ServiceCost)).ToList()
+                request.Services.Select(s => TicketServiceModel.Create(0, s.ServiceId, id)).ToList()
             );
 
             var result = await service.UpdateTicketAsync(id, ticketModel);
-            return result ? Results.Ok(new { Message = "Билет обновлён" }) : Results.NotFound();
+            return result ? Results.Ok("Билет обновлён") : Results.NotFound();
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(ex.Message);
         }
     }
 
@@ -95,11 +104,11 @@ public static class TicketEndpoints
         try
         {
             var result = await service.DeleteTicketAsync(id);
-            return result ? Results.Ok(new { Message = "Билет удалён" }) : Results.NotFound();
+            return result ? Results.Ok("Билет удалён") : Results.NotFound();
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { Message = ex.Message });
+            return Results.BadRequest(ex.Message);
         }
     }
 }

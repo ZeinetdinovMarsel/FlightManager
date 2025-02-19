@@ -1,16 +1,19 @@
-﻿public class TicketServiceModel
+﻿using FM.Core.Models;
+
+public class TicketServiceModel
 {
-    private TicketServiceModel(int id, string serviceName, float serviceCost)
+    private TicketServiceModel(int id, int serviceId, int ticketId)
     {
         Id = id;
-        ServiceName = serviceName;
-        ServiceCost = serviceCost;
+        ServiceId=serviceId;
+        TicketId=ticketId;
     }
     public int Id { get; private set; }
-    public string ServiceName { get; private set; } = string.Empty;
-    public float ServiceCost { get; private set; }
-    public static TicketServiceModel Create(int id, string serviceName, float serviceCost)
+    public int ServiceId { get; private set; }
+    public int TicketId { get; private set; }
+
+    public static TicketServiceModel Create(int id, int serviceId, int ticketId)
     {
-        return new TicketServiceModel(id, serviceName, serviceCost);
+        return new TicketServiceModel(id,serviceId,ticketId);
     }
 }

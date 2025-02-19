@@ -11,9 +11,19 @@ public class TicketService : ITicketService
         _ticketRepository = ticketRepository;
     }
 
-    public async Task<IEnumerable<TicketModel>> GetAllTicketsAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? filter = null)
+    public async Task<IEnumerable<TicketModel>> GetAllTicketsAsync(
+    string? sortBy = null,
+    bool descending = false,
+    int page = 1,
+    int pageSize = 10,
+    int? ticketTypeFilter = null,
+    float? priceFilter = null,
+    string? seatFilter = null,
+    int? flightIdFilter = null,
+    int[]? serviceIdsFilter = null
+)
     {
-        return await _ticketRepository.GetAllAsync(sortBy, descending, page, pageSize, filter);
+        return await _ticketRepository.GetAllAsync(sortBy, descending, page, pageSize, ticketTypeFilter, priceFilter, seatFilter, flightIdFilter, serviceIdsFilter);
     }
 
     public async Task<TicketModel?> GetTicketByIdAsync(int id)

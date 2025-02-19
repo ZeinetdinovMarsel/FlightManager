@@ -79,11 +79,17 @@ const resources = {
     },
   },
 };
-i18n.use(initReactI18next).init({
-  resources,
-  lng: "ru",
-  fallbackLng: "en",
-  interpolation: { escapeValue: false },
-});
+const storedLanguage = localStorage.getItem("language") || "ru";
+
+i18n
+  .use(initReactI18next)
+  .init({
+    resources,
+    lng: storedLanguage,
+    fallbackLng: "en",
+    interpolation: {
+      escapeValue: false,
+    },
+  });
 
 export default i18n;

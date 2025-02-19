@@ -11,7 +11,5 @@ public record TicketRequest
 
 public record TicketServiceRequest
 {
-    public int Id { get; set; }
-    public string ServiceName { get; set; } = string.Empty;
-    public float ServiceCost { get; set; }
+    public int ServiceId { get; set; }
 }

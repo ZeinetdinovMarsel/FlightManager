@@ -7,9 +7,11 @@ import { useSettingsStore } from "./store/settings";
 import SignUpPage from "./pages/SignUpPage";
 import SignInPage from "./pages/SignInPage";
 import Profile from "./pages/Profile";
-import AirportsPage from "./pages/AirportsPage";
+import AirportsPage from "./pages/AirportPage";
 import FederalDistrictPage from "./pages/FederalDistrictsPage";
-import FlightsPage from "./pages/FlightsPage";
+import FlightsPage from "./pages/FlightPage";
+import ServicePage from "./pages/ServicePage";
+import TicketPage from "./pages/TicketPage";
 
 
 export default function App() {
@@ -20,13 +22,7 @@ export default function App() {
   const [language, setLanguage] = useState(settings.language);
 
 
-  useEffect(() => {
-    setLanguage(settings.language);
 
-  }, [settings]);
-  const handleLanguageChange = (event) => {
-    settings.setLanguage(event.target.value);
-  };
 
   const handleSignOut = () => {
     signOut();
@@ -39,20 +35,6 @@ export default function App() {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             {t("siteName")}
           </Typography>
-
-          <Select
-            value={language}
-            onChange={handleLanguageChange}
-            label={t("language")}
-            sx={{
-              color: "white",
-              width: 120,
-              maxWidth: "100%",
-            }}
-          >
-            <MenuItem value="en">English</MenuItem>
-            <MenuItem value="ru">Русский</MenuItem>
-          </Select>
 
 
           <Box>
@@ -67,8 +49,11 @@ export default function App() {
                 <Button color="inherit" component={Link} to="/federalDistricts">
                   {t("federalDistricts")}
                 </Button>
-                <Button color="inherit" component={Link} to="/dashboard">
-                  {t("dashboard")}
+                <Button color="inherit" component={Link} to="/tickets">
+                  {t("tickets")}
+                </Button>
+                <Button color="inherit" component={Link} to="/services">
+                  {t("services")}
                 </Button>
                 <Button color="inherit" component={Link} to="/profile">
                   {t("profile")}
@@ -101,6 +86,8 @@ export default function App() {
         <Route path="/airports" element={isAuthenticated ? <AirportsPage /> : <Navigate to="/signIn" />} />
         <Route path="/federalDistricts" element={isAuthenticated ? <FederalDistrictPage /> : <Navigate to="/signIn" />} />
         <Route path="/flights" element={isAuthenticated ? <FlightsPage /> : <Navigate to="/signIn" />} />
+        <Route path="/tickets" element={isAuthenticated ? <TicketPage /> : <Navigate to="/signIn" />} />
+        <Route path="/services" element={isAuthenticated ? <ServicePage /> : <Navigate to="/signIn" />} />
       </Routes>
     </div>
   );

@@ -38,11 +38,8 @@ public class UsersRepository : IUsersRepository
     {
         var userEntity = await _context.Users.AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email);
-        if (userEntity == null) {
-            throw new Exception("Пользователь не найден");
-        }
 
-        return MapToModel(userEntity);
+        return userEntity == null ? null : MapToModel(userEntity);
     }
 
     public async Task<UserModel> GetByIdAsync(Guid id)

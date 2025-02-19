@@ -3,6 +3,7 @@ using System;
 using FM.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FM.DataAccess.Migrations
 {
     [DbContext(typeof(FMDbContext))]
-    partial class FMDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250219170401_Services")]
+    partial class Services
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -323,23 +326,18 @@ namespace FM.DataAccess.Migrations
 
             modelBuilder.Entity("TicketServiceEntity", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("TicketId")
                         .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ServiceId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("TicketId")
+                    b.Property<int>("Id")
                         .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("TicketId", "ServiceId");
 
                     b.HasIndex("ServiceId");
-
-                    b.HasIndex("TicketId");
 
                     b.ToTable("TicketServices");
                 });
