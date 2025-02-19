@@ -14,13 +14,45 @@ public class FlightRepository : IFlightRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<FlightModel>> GetAllAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? filter = null)
+    public async Task<IEnumerable<FlightModel>> GetAllAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10,
+        string? flightNumberFilter = null,
+        string? destinationFilter = null,
+        DateTime? departureTimeFilter = null,
+        DateTime? arrivalTimeFilter = null,
+        int? availableSeatsFilter = null,
+        int? airoirtIdFilter = null
+        )
     {
         var query = _context.Flights.Include(f => f.Airport).AsQueryable();
 
-        if (!string.IsNullOrEmpty(filter))
+        if (!string.IsNullOrEmpty(flightNumberFilter))
         {
-            query = query.Where(f => f.FlightNumber.Contains(filter) || f.Destination.Contains(filter));
+            query = query.Where(f => f.FlightNumber.Contains(flightNumberFilter));
+        }
+
+        if (!string.IsNullOrEmpty(destinationFilter))
+        {
+            query = query.Where(f => f.Destination.Contains(destinationFilter));
+        }
+
+        if (departureTimeFilter.HasValue)
+        {
+            query = query.Where(f => f.DepartureTime == departureTimeFilter.Value);
+        }
+
+        if (arrivalTimeFilter.HasValue)
+        {
+            query = query.Where(f => f.ArrivalTime == arrivalTimeFilter.Value);
+        }
+
+        if (availableSeatsFilter.HasValue)
+        {
+            query = query.Where(f => f.AvailableSeats == availableSeatsFilter.Value);
+        }
+
+        if (airoirtIdFilter.HasValue)
+        {
+            query = query.Where(f => f.AirportId == airoirtIdFilter.Value);
         }
 
         if (!string.IsNullOrEmpty(sortBy))
@@ -30,9 +62,9 @@ public class FlightRepository : IFlightRepository
                 "id" => descending ? query.OrderByDescending(f => f.Id) : query.OrderBy(f => f.Id),
                 "flightnumber" => descending ? query.OrderByDescending(f => f.FlightNumber) : query.OrderBy(f => f.FlightNumber),
                 "destination" => descending ? query.OrderByDescending(f => f.Destination) : query.OrderBy(f => f.Destination),
-                "departureTime" => descending ? query.OrderByDescending(f => f.DepartureTime) : query.OrderBy(f => f.DepartureTime),
-                "arrivalTime" => descending ? query.OrderByDescending(f => f.ArrivalTime) : query.OrderBy(f => f.ArrivalTime),
-                "availableSeats" => descending ? query.OrderByDescending(f => f.AvailableSeats) : query.OrderBy(f => f.AvailableSeats),
+                "departuretime" => descending ? query.OrderByDescending(f => f.DepartureTime) : query.OrderBy(f => f.DepartureTime),
+                "arrivaltime" => descending ? query.OrderByDescending(f => f.ArrivalTime) : query.OrderBy(f => f.ArrivalTime),
+                "availableseats" => descending ? query.OrderByDescending(f => f.AvailableSeats) : query.OrderBy(f => f.AvailableSeats),
                 "airport" => descending ? query.OrderByDescending(f => f.Airport.Name) : query.OrderBy(f => f.Airport.Name),
                 _ => query
             };

@@ -19,11 +19,18 @@ public static class FlightEndpoints
     }
 
     private static async Task<IResult> GetFlights(FlightService service,
-             string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? filter = null)
+             string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10,
+             string? flightNumberFilter = null,
+            string? destinationFilter = null,
+            DateTime? departureTimeFilter = null,
+            DateTime? arrivalTimeFilter = null,
+            int? availableSeatsFilter = null,
+            int? airoirtIdFilter = null
+        )
     {
         try
         {
-            var flights = await service.GetAllAsync(sortBy, descending, page, pageSize, filter);
+            var flights = await service.GetAllAsync(sortBy, descending, page, pageSize, flightNumberFilter, destinationFilter, departureTimeFilter, arrivalTimeFilter, availableSeatsFilter, airoirtIdFilter);
             return Results.Ok(flights);
         }
         catch (Exception ex)

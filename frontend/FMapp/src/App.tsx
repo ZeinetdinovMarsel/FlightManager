@@ -8,7 +8,8 @@ import SignUpPage from "./pages/SignUpPage";
 import SignInPage from "./pages/SignInPage";
 import Profile from "./pages/Profile";
 import AirportsPage from "./pages/AirportsPage";
-import FederalDistrictPage from "./pages/FederalDistrictPage";
+import FederalDistrictPage from "./pages/FederalDistrictsPage";
+import FlightsPage from "./pages/FlightsPage";
 
 
 export default function App() {
@@ -99,6 +100,7 @@ export default function App() {
         <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/signIn" />} />
         <Route path="/airports" element={isAuthenticated ? <AirportsPage /> : <Navigate to="/signIn" />} />
         <Route path="/federalDistricts" element={isAuthenticated ? <FederalDistrictPage /> : <Navigate to="/signIn" />} />
+        <Route path="/flights" element={isAuthenticated ? <FlightsPage /> : <Navigate to="/signIn" />} />
       </Routes>
     </div>
   );

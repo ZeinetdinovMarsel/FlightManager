@@ -84,7 +84,7 @@ const AirportPage: React.FC = () => {
             try {
                 const data = await getFederalDistricts();
                 setFederalDistricts(data);
-                const federalDistrictsMap = data.reduce((acc, district) => {
+                const federalDistrictsMap = data.reduce((acc: { [x: string]: any; }, district: { id: string | number; name: any; }) => {
                     acc[district.id] = district.name;
                     return acc;
                 }, {});
@@ -222,7 +222,7 @@ const AirportPage: React.FC = () => {
                         value={nameFilter}
                         onChange={(e) => handleFilterChange("name", e.target.value)}
                         variant="outlined"
-                        size="small"
+                        size="medium"
                         style={{ margin: "10px" }}
                     />
                     <TextField
@@ -230,10 +230,10 @@ const AirportPage: React.FC = () => {
                         value={cityFilter}
                         onChange={(e) => handleFilterChange("city", e.target.value)}
                         variant="outlined"
-                        size="small"
+                        size="medium"
                         style={{ margin: "10px" }}
                     />
-                    <FormControl variant="outlined" size="small" style={{ margin: "10px" }}>
+                    <FormControl variant="outlined" size="medium" style={{ margin: "10px",width: "200px" }}>
                         <InputLabel>{t("filterByFederalDistrict")}</InputLabel>
                         <Select
                             value={federalDistrictFilter}

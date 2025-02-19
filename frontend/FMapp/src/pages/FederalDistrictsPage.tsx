@@ -188,7 +188,7 @@ const FederalDistrictPage: React.FC = () => {
             >
                 <div>
                     <Button onClick={handleAddOpen} color="primary" variant="contained" style={{ margin: "10px" }}>
-                        {t("addAirport")}
+                        {t("addFederalDistrict")}
                     </Button>
                 </div>
                 <div>
@@ -197,7 +197,7 @@ const FederalDistrictPage: React.FC = () => {
                         value={nameFilter}
                         onChange={(e) => handleFilterChange("name", e.target.value)}
                         variant="outlined"
-                        size="small"
+                        size="medium"
                         style={{ margin: "10px" }}
                     />
                 </div>
@@ -205,7 +205,7 @@ const FederalDistrictPage: React.FC = () => {
             <div style={{ margin: "10px" }}>
                 <strong>{t("totalRecords")}: {federalDistricts.length}</strong>
             </div>
-            <h2>{t("airportsTable")}</h2>
+            <h2>{t("FederalDistrictsTable")}</h2>
 
             <Table>
                 <TableHead>
@@ -281,7 +281,7 @@ const FederalDistrictPage: React.FC = () => {
             />
 
             <Dialog open={addDialog.open} onClose={() => setAddDialog({ open: false, federalDistrict: { name: ""} })}>
-                <DialogTitle>{t("addAirport")}</DialogTitle>
+                <DialogTitle>{t("addFederalDistrict")}</DialogTitle>
                 <DialogContent style={{ padding: "20px" }}>
                     <TextField
                         label={t("name")}
@@ -330,7 +330,7 @@ const FederalDistrictPage: React.FC = () => {
             </Dialog>
 
             <Dialog open={editDialog.open} onClose={() => setEditDialog({ open: false, federalDistrict: null })}>
-                <DialogTitle>{t("editAirport")}</DialogTitle>
+                <DialogTitle>{t("editFederalDistrict")}</DialogTitle>
                 <DialogContent style={{ padding: "20px" }}>
                     <TextField
                         label={t("name")}

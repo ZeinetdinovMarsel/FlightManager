@@ -12,9 +12,16 @@ public class FlightService : IFlightService
         _flightRepository = flightRepository;
     }
 
-    public async Task<IEnumerable<FlightModel>> GetAllAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10, string? filter = null)
+    public async Task<IEnumerable<FlightModel>> GetAllAsync(string? sortBy = null, bool descending = false, int page = 1, int pageSize = 10,
+        string? flightNumberFilter = null,
+        string? destinationFilter = null,
+        DateTime? departureTimeFilter = null,
+        DateTime? arrivalTimeFilter = null,
+        int? availableSeatsFilter = null,
+        int? airoirtIdFilter = null
+        )
     {
-        return await _flightRepository.GetAllAsync(sortBy, descending, page, pageSize, filter);
+        return await _flightRepository.GetAllAsync(sortBy, descending, page, pageSize, flightNumberFilter,destinationFilter,departureTimeFilter,arrivalTimeFilter,availableSeatsFilter,airoirtIdFilter);
     }
 
     public async Task<FlightModel?> GetByIdAsync(int id)
