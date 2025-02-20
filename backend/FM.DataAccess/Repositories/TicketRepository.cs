@@ -65,7 +65,8 @@ public class TicketRepository : ITicketRepository
                 "price" => descending ? query.OrderByDescending(t => t.Price) : query.OrderBy(t => t.Price),
                 "seat" => descending ? query.OrderByDescending(t => t.Seat) : query.OrderBy(t => t.Seat),
                 "flight" => descending ? query.OrderByDescending(t => t.Flight.FlightNumber) : query.OrderBy(t => t.Flight.FlightNumber),
-                "servicecount" => descending
+                "flightid" => descending ? query.OrderByDescending(t => t.FlightId) : query.OrderBy(t => t.FlightId),
+                "services" => descending
                     ? query.OrderByDescending(t => t.Services.Count)
                     : query.OrderBy(t => t.Services.Count),
                 _ => query

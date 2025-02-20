@@ -20,5 +20,7 @@ public partial class ServiceConfiguration : IEntityTypeConfiguration<ServiceEnti
                .WithOne(ts => ts.Service)
                .HasForeignKey(ts => ts.ServiceId)
                .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasData(SeedData.Services);
     }
 }

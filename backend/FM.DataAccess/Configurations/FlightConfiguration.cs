@@ -32,5 +32,7 @@ public partial class FlightConfiguration : IEntityTypeConfiguration<FlightEntity
 
         builder.Property(f => f.AirplanePhotoUrl)
                .HasMaxLength(500);
+
+        builder.HasData(SeedData.Flights);
     }
 }

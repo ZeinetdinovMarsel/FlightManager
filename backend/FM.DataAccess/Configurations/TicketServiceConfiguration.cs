@@ -28,5 +28,7 @@ public partial class TicketServiceConfiguration : IEntityTypeConfiguration<Ticke
 
         builder.Property(ts => ts.TicketId)
                .IsRequired();
+
+        builder.HasData(SeedData.TicketServices);
     }
 }

@@ -23,5 +23,6 @@ public partial class AirportConfiguration : IEntityTypeConfiguration<AirportEnti
         builder.Property(a => a.FederalDistrictId)
                .IsRequired();
 
+        builder.HasData(SeedData.Airports);
     }
 }

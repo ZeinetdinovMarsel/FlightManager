@@ -6,7 +6,7 @@ import DataTable from '../components/DataTable';
 const FederalDistrictPage: React.FC = () => {
 
     const columns = [
-        { id: 'id', label: 'id', sortable: true },
+        { id: 'id', label: 'id', sortable: true, type: 'number' },
         { id: 'name', label: 'federalDistrictName', sortable: true },
     ];
 
@@ -31,6 +31,7 @@ const FederalDistrictPage: React.FC = () => {
 
     return (
         <DataTable
+            tableName='federalDistricts'
             columns={columns}
             fetchData={fetchData}
             addItem={addItem}

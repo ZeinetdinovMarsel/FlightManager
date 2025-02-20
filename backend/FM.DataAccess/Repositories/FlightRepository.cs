@@ -65,7 +65,7 @@ public class FlightRepository : IFlightRepository
                 "departuretime" => descending ? query.OrderByDescending(f => f.DepartureTime) : query.OrderBy(f => f.DepartureTime),
                 "arrivaltime" => descending ? query.OrderByDescending(f => f.ArrivalTime) : query.OrderBy(f => f.ArrivalTime),
                 "availableseats" => descending ? query.OrderByDescending(f => f.AvailableSeats) : query.OrderBy(f => f.AvailableSeats),
-                "airport" => descending ? query.OrderByDescending(f => f.Airport.Name) : query.OrderBy(f => f.Airport.Name),
+                "airportid" => descending ? query.OrderByDescending(f => f.Airport.Name) : query.OrderBy(f => f.Airport.Name),
                 _ => query
             };
         }

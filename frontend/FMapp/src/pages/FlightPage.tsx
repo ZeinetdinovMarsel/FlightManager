@@ -9,13 +9,13 @@ import { getAirports } from '../api/airport';
 const FlightsPage: React.FC = () => {
     const [airports, setAirports] = useState<{ id: number; name: string }[]>([]);
     const columns = [
-        { id: 'id', label: 'id', sortable: true },
+        { id: 'id', label: 'id', sortable: true , type: 'number'},
         { id: 'flightNumber', label: 'flightNumber', sortable: true },
         { id: 'destination', label: 'destination', sortable: true },
         { id: 'departureTime', label: 'departureTime', sortable: true, type: 'date' },
         { id: 'arrivalTime', label: 'arrivalTime', sortable: true, type: 'date' },
         { id: 'availableSeats', label: 'availableSeats', sortable: true, type: 'number' },
-        { id: 'airplanePhotoUrl', label: 'airplanePhotoUrl', sortable: true },
+        { id: 'airplanePhotoUrl', label: 'airplanePhotoUrl', sortable: false, type: 'imageUrl' },
         { id: 'airportId', label: 'airportId', sortable: true, type: 'select' },
     ];
 
@@ -59,6 +59,7 @@ const FlightsPage: React.FC = () => {
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DataTable
+                tableName='flights'
                 columns={columns}
                 fetchData={fetchData}
                 addItem={addItem}

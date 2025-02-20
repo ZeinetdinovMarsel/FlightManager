@@ -11,7 +11,7 @@ const TicketPage: React.FC = () => {
     const [ticketTypes, setTicketTypes] = useState<TicketType[]>();
 
     const columns = [
-        { id: 'id', label: 'id', sortable: true },
+        { id: 'id', label: 'id', sortable: true, type: 'number' },
         { id: 'ticketType', label: 'ticketType', sortable: true, type: 'select' },
         { id: 'price', label: 'price', sortable: true, type: 'number' },
         { id: 'seat', label: 'seat', type: 'number', sortable: true },
@@ -125,6 +125,7 @@ const TicketPage: React.FC = () => {
 
     return (
         <DataTable
+            tableName='tickets'
             columns={columns}
             fetchData={fetchData}
             addItem={addItem}

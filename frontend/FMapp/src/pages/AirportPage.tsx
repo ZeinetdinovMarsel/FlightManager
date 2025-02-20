@@ -10,10 +10,10 @@ const AirportPage: React.FC = () => {
     const [federalDistricts, setFederalDistricts] = useState<{ id: number; name: string }[]>([]);
 
     const columns = [
-        { id: 'id', label: 'id', sortable: true },
+        { id: 'id', label: 'id', sortable: true, type: 'number' },
         { id: 'name', label: 'airports', sortable: true },
         { id: 'city', label: 'city', sortable: true },
-        { id: 'federalDistrictId', label: 'federalDistrictId', sortable: true, type: 'select' },
+        { id: 'federalDistrictId', label: 'federalDistricts', sortable: true, type: 'select' },
     ];
 
     const fetchAirports = async () => {
@@ -46,6 +46,7 @@ const AirportPage: React.FC = () => {
 
     return (
         <DataTable
+            tableName='airports'
             columns={columns}
             fetchData={fetchData}
             addItem={addItem}

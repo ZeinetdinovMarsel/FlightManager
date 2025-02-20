@@ -5,9 +5,8 @@ import DataTableService from '../components/DataTable';
 
 const ServicePage: React.FC = () => {
 
-    // Определение колонок для таблицы услуг
     const columns = [
-        { id: 'id', label: 'ID', sortable: true },
+        { id: 'id', label: 'ID', sortable: true, type: 'number' },
         { id: 'name', label: 'Название Услуги', sortable: true },
         { id: 'cost', label: 'Стоимость', sortable: true, type: 'number' },
     ];
@@ -22,8 +21,6 @@ const ServicePage: React.FC = () => {
             throw error;
         }
     };
-
-    // Функция для добавления новой услуги
     const addItem = async (item: any) => {
         try {
             const service = await createService(item.name, item.cost);
@@ -33,8 +30,6 @@ const ServicePage: React.FC = () => {
             throw error;
         }
     };
-
-    // Функция для обновления существующей услуги
     const updateItem = async (item: any) => {
         try {
             const service = await updateService(item.id, item.name, item.cost);
@@ -45,7 +40,6 @@ const ServicePage: React.FC = () => {
         }
     };
 
-    // Функция для удаления услуги
     const deleteItem = async (id: number) => {
         try {
             await deleteService(id);
@@ -56,19 +50,20 @@ const ServicePage: React.FC = () => {
     };
 
     return (
-            <DataTableService
-                columns={columns}
-                fetchData={fetchData}
-                addItem={addItem}
-                updateItem={updateItem}
-                deleteItem={deleteItem}
-                filters={{
-                    name: '',
-                    cost: null,
-                }}
-                initialSortBy="id"
-                initialDescending={false}
-            />
+        <DataTableService
+            tableName='services'
+            columns={columns}
+            fetchData={fetchData}
+            addItem={addItem}
+            updateItem={updateItem}
+            deleteItem={deleteItem}
+            filters={{
+                name: '',
+                cost: null,
+            }}
+            initialSortBy="id"
+            initialDescending={false}
+        />
     );
 };
 

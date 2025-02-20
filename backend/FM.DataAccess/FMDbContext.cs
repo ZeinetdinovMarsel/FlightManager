@@ -19,15 +19,8 @@ public class FMDbContext(
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FMDbContext).Assembly);
-        
-       
 
         modelBuilder.ApplyConfiguration(new RolePermissionConfiguration(authOptions.Value));
-        modelBuilder.ApplyConfiguration(new UserConfiguration());
-        modelBuilder.ApplyConfiguration(new TicketConfiguration());
-        modelBuilder.ApplyConfiguration(new ServiceConfiguration());
-        modelBuilder.ApplyConfiguration(new TicketServiceConfiguration());
-        modelBuilder.ApplyConfiguration(new FlightConfiguration());
-        modelBuilder.ApplyConfiguration(new AirportConfiguration());
+
     }
 }

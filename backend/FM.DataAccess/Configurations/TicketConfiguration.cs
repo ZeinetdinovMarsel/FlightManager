@@ -15,5 +15,7 @@ public partial class TicketConfiguration : IEntityTypeConfiguration<TicketEntity
                .HasMaxLength(10);
         builder.Property(t => t.Price)
                .IsRequired();
+
+        builder.HasData(SeedData.Tickets);
     }
 }

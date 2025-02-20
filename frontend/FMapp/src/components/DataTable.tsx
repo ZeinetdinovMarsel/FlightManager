@@ -34,16 +34,19 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { useSettingsStore } from "../store/settings";
 import { TicketType } from '../api/ticket';
+import ImagePopup from './ImagePopup';
+import loadingGif from '../assets/loader.gif'
 
 interface Column {
     id: string;
     label: string;
     sortable?: boolean;
     render?: (row: any) => React.ReactNode;
-    type?: 'date' | 'text' | 'number' | 'select' | 'multiselect';
+    type?: 'date' | 'text' | 'number' | 'select' | 'multiselect' | 'imageUrl';
 }
 
 interface DataTableProps {
+    tableName: string;
     columns: Column[];
     fetchData: (sortBy: string, descending: boolean, page: number, pageSize: number, filters: any) => Promise<any[]>;
     addItem: (item: any) => Promise<any>;
@@ -62,6 +65,7 @@ interface DataTableProps {
 }
 
 const DataTable: React.FC<DataTableProps> = ({
+    tableName,
     columns,
     fetchData,
     addItem,
@@ -88,13 +92,14 @@ const DataTable: React.FC<DataTableProps> = ({
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
     const [dialogItem, setDialogItem] = useState<any>({});
-    const [editDialog, setEditDialog] = useState<{ open: boolean; item: any | null }>({ open: false, item: null });
-    const [addDialog, setAddDialog] = useState<{ open: boolean; item: any }>({ open: false, item: {} });
     const [error, setError] = useState<string | null>(null);
     const [hoveredRow, setHoveredRow] = useState<number | null>(null);
     const [filtersState, setFiltersState] = useState<any>(filters);
     const [loading, setLoading] = useState<boolean>(true);
-    const [editItem, setEditItem] = useState<any>(null);
+
+
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [showPopup, setShowPopup] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchDataAsync = async () => {
@@ -168,20 +173,6 @@ const DataTable: React.FC<DataTableProps> = ({
     };
 
 
-    const handleEditSave = async () => {
-        if (editItem) {
-            try {
-                await updateItem(editItem);
-                const data = await fetchData(sortBy, descending, page + 1, rowsPerPage, filtersState);
-                setData(data);
-            } catch (err: any) {
-                setError(err.response?.data || err.message);
-            }
-        }
-        setEditDialog({ open: false, item: null });
-        setEditItem(null);
-    };
-
     const handleAddOpen = () => {
         setDialogMode('add');
         setDialogItem({});
@@ -207,17 +198,6 @@ const DataTable: React.FC<DataTableProps> = ({
         setDialogItem({ ...dialogItem, [field]: value });
     };
 
-    const handleAddSave = async () => {
-        try {
-            await addItem(addDialog.item);
-            const data = await fetchData(sortBy, descending, page + 1, rowsPerPage, filtersState);
-            setData(data);
-            setAddDialog({ open: false, item: {} });
-        } catch (err: any) {
-            setError(err.response?.data || err.message);
-        }
-    };
-
     const handleFilterChange = (field: string, value: any) => {
         setFiltersState({ ...filtersState, [field]: value });
         setPage(0);
@@ -230,10 +210,6 @@ const DataTable: React.FC<DataTableProps> = ({
     const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
-    };
-
-    const handleEditChange = (field: string, value: any) => {
-        setEditItem({ ...editItem, [field]: value });
     };
 
     const formatDate = (date: any) => {
@@ -262,7 +238,7 @@ const DataTable: React.FC<DataTableProps> = ({
         if (Array.isArray(servicess)) {
             return servicess.map((service: any) => {
                 const foundService = services.find((s) => s.id === service.serviceId);
-                return foundService ? foundService.name : 'Неизвестная услуга';
+                return foundService ? foundService.name : 'N/A';
             }).join(', ');
         }
         return '';
@@ -284,20 +260,19 @@ const DataTable: React.FC<DataTableProps> = ({
 
     const getFilterComponent = (col, value, onChange, t, dialog) => {
         const handleChange = (newValue) => {
-            // Если значение пустое, установить в null для типов 'select' и 'date'
             if ((col.type === 'select' || col.type === 'date') && (!newValue || newValue === '')) {
                 onChange(col.id, null);
             } else {
                 onChange(col.id, newValue);
             }
         };
-    
+
         switch (col.type) {
             case 'date':
                 return (
                     <LocalizationProvider dateAdapter={AdapterDateFns} key={col.id}>
                         <DateTimePicker
-                            label={t(col.label)}
+                            label={dialog ? t(col.label) : `${t("filterBy")} ${t(col.label)}`}
                             value={value || null}
                             onChange={handleChange}
                             ampm={false}
@@ -309,13 +284,12 @@ const DataTable: React.FC<DataTableProps> = ({
             case 'multiselect':
                 return (
                     <FormControl key={col.id} sx={{ margin: dialog ? 0 : 1, marginBottom: 2, width: dialog ? "100%" : "250px" }}>
-                        <InputLabel>{t(col.label)}</InputLabel>
+                        <InputLabel>{dialog ? t(col.label) : `${t("filterBy")} ${t(col.label)}`}</InputLabel>
                         <Select
                             multiple
                             value={value || []}
                             onChange={(e) => {
                                 const selected = e.target.value;
-                                // Если выбрано пустое значение, установить в пустой массив
                                 if (selected.length === 0) {
                                     onChange(col.id, []);
                                 } else {
@@ -340,7 +314,7 @@ const DataTable: React.FC<DataTableProps> = ({
             case 'select':
                 return (
                     <FormControl key={col.id} sx={{ margin: dialog ? 0 : 1, marginBottom: 2, width: dialog ? "100%" : "250px" }}>
-                        <InputLabel>{t(col.label)}</InputLabel>
+                        <InputLabel>{dialog ? t(col.label) : `${t("filterBy")} ${t(col.label)}`}</InputLabel>
                         <Select
                             value={value !== undefined ? value : ''}
                             onChange={(e) => {
@@ -353,7 +327,7 @@ const DataTable: React.FC<DataTableProps> = ({
                             }}
                         >
                             <MenuItem value="">
-                                <em>{t("None")}</em>
+                                <em>{t("none")}</em>
                             </MenuItem>
                             {(col.id === 'airportId'
                                 ? airports
@@ -364,20 +338,46 @@ const DataTable: React.FC<DataTableProps> = ({
                                         : federalDistricts).map((item) => (
                                             <MenuItem key={item.id} value={item.id}>
                                                 {item.name || item.flightNumber}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-            );
+                                            </MenuItem>
+                                        ))}
+                        </Select>
+                    </FormControl>
+                );
+
+            case 'imageUrl':
+                return (dialog ?
+                    <div key={col.id} style={{ margin: dialog ? 0 : 1, marginBottom: 2, width: dialog ? "100%" : "0px" }}>
+                        <TextField
+                            label={dialog ? t(col.label) : `${t("filterBy")} ${t(col.label)}`}
+                            value={value !== undefined ? value : ''}
+                            onChange={(e) => {
+                                const newValue = e.target.value;
+                                onChange(col.id, newValue);
+                            }}
+                            sx={{ margin: dialog ? 0 : 1, marginBottom: 2, width: dialog ? "100%" : "250px" }}
+                            type="text"
+                        />
+                        {value && (
+                            <div style={{ marginBottom: 2 }}>
+                                <Button variant="outlined" sx={{ marginBottom: 2 }} onClick={() => {
+                                    setImageUrl(value);
+                                    setShowPopup(true);
+                                }}>
+                                    {t("viewImage")}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                    : null
+                );
             default:
                 return (
                     <TextField
                         key={col.id}
-                        label={t(col.label)}
+                        label={dialog ? t(col.label) : `${t("filterBy")} ${t(col.label)}`}
                         value={value !== undefined ? value : ''}
                         onChange={(e) => {
                             const newValue = e.target.value;
-                            // Если поле пустое, установить в null
                             if (newValue === '') {
                                 onChange(col.id, null);
                             } else {
@@ -391,6 +391,42 @@ const DataTable: React.FC<DataTableProps> = ({
         }
     };
 
+    const handleClosePopup = () => {
+        setShowPopup(false);
+        setImageUrl(null);
+    };
+
+
+    const getCellContent = (col, item, index) => {
+        if (col.label === 'id') {
+            return index + 1;
+        }
+        else if (col.id === 'airplanePhotoUrl') {
+            return (
+                <a href={item[col.id]} target="_blank" rel="noopener noreferrer" onClick={(e) => {
+                    e.preventDefault();
+                    setImageUrl(item[col.id]);
+                    setShowPopup(true);
+                }}>
+                    {t("viewImage")}
+                </a>
+            );
+        } else if (col.type === 'date') {
+            return formatDate(item[col.id]);
+        } else if (col.id === 'services') {
+            return getServiceName(item[col.id]);
+        } else if (col.id === 'airportId') {
+            return getAirportName(item[col.id]);
+        } else if (col.id === 'federalDistrictId') {
+            return getFederalDistrictName(item[col.id]);
+        } else if (col.id === 'flightId') {
+            return getFlightNumber(item[col.id]);
+        } else if (col.id === 'ticketType') {
+            return getTicketTypeName(item[col.id]);
+        } else {
+            return item[col.id] !== undefined && item[col.id] !== null ? item[col.id] : 'N/A';
+        }
+    };
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <TableContainer component={Paper}>
@@ -418,27 +454,24 @@ const DataTable: React.FC<DataTableProps> = ({
                 <div style={{ margin: "10px" }}>
                     <strong>{t("totalRecords")}: {data.length}</strong>
                 </div>
-                <h2>{t("dataTable")}</h2>
+                <h2 style={{ textAlign: 'center' }}>{t(`${tableName}`)}</h2>
 
                 {loading ? (
-                    <Table>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell colSpan={columns.length + 1}>Loading...</TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+                        <img src={loadingGif} alt="Loading" style={{ width: '5%', height: 'auto' }} />
+                    </div>
                 ) : (
                     <Table>
                         <TableHead>
-                            <TableRow>
+                            <TableRow style={{ backgroundColor: '#005da8', color: '#fff' }}>
                                 {columns.map((col) => (
-                                    <TableCell key={col.id} align="center">
+                                    <TableCell key={col.id} align="center" style={{ fontWeight: 'bold', color: '#fff' }}>
                                         {col.sortable ? (
                                             <TableSortLabel
                                                 active={sortBy === col.id}
                                                 direction={descending ? "desc" : "asc"}
                                                 onClick={() => handleSort(col.id)}
+                                                style={{ color: '#fff' }}
                                             >
                                                 {t(col.label)}
                                             </TableSortLabel>
@@ -447,7 +480,7 @@ const DataTable: React.FC<DataTableProps> = ({
                                         )}
                                     </TableCell>
                                 ))}
-                                <TableCell>{t("actions")}</TableCell>
+                                <TableCell style={{ color: '#fff' }}>{t("actions")}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -456,17 +489,17 @@ const DataTable: React.FC<DataTableProps> = ({
                                     <TableCell colSpan={columns.length + 1} align="center">No data available</TableCell>
                                 </TableRow>
                             ) : (
-                                data.map((item) => (
+                                data.map((item, index) => (
                                     <TableRow
                                         key={item.id}
                                         style={{
                                             backgroundColor:
-                                                item.id % 2 === 0 ? "#f9f9f9" : "#ffffff",
+                                                index % 2 === 0 ? "#f9f9f9" : "#ffffff",
                                             cursor: "pointer",
                                             backgroundColor:
                                                 hoveredRow === item.id
                                                     ? "#d3e0e9"
-                                                    : item.id % 2 === 0
+                                                    : index % 2 === 1
                                                         ? "#f9f9f9"
                                                         : "#ffffff",
                                         }}
@@ -475,25 +508,8 @@ const DataTable: React.FC<DataTableProps> = ({
                                         onMouseLeave={() => setHoveredRow(null)}
                                     >
                                         {columns.map((col) => (
-                                            <TableCell key={col.id} style={{ textAlign: "center" }}>
-                                                {
-                                                    col.type === 'date'
-                                                        ? formatDate(item[col.id])
-                                                        : col.id === 'services'
-                                                            ? getServiceName(item[col.id])
-                                                            : col.id === 'airportId'
-                                                                ? getAirportName(item[col.id])
-                                                                : col.id === 'federalDistrictId'
-                                                                    ? getFederalDistrictName(item[col.id])
-                                                                    : col.id === 'flightId'
-                                                                        ? getFlightNumber(item[col.id])
-                                                                        : col.id === 'ticketType'
-                                                                            ? getTicketTypeName(item[col.id])
-                                                                            : item[col.id] !== undefined && item[col.id] !== null
-                                                                                ? item[col.id]
-                                                                                : 'N/A'
-
-                                                }
+                                            <TableCell key={col.id} align={(col.type === 'number' || col.type === 'date' || col.type === 'imageUrl') ? 'center' : 'left'}>
+                                                {getCellContent(col, item, index)}
                                             </TableCell>
                                         ))}
                                         <TableCell>
@@ -554,7 +570,7 @@ const DataTable: React.FC<DataTableProps> = ({
                         </Button>
                     </DialogActions>
                 </Dialog>
-
+                <ImagePopup open={showPopup} imageUrl={imageUrl} onClose={handleClosePopup} />
                 <Snackbar
                     open={!!error}
                     autoHideDuration={6000}
