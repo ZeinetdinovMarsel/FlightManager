@@ -33,13 +33,14 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { useSettingsStore } from "../store/settings";
+import { TicketType } from '../api/ticket';
 
 interface Column {
     id: string;
     label: string;
     sortable?: boolean;
     render?: (row: any) => React.ReactNode;
-    type?: 'date' | 'text' | 'number';
+    type?: 'date' | 'text' | 'number' | 'select' | 'multiselect';
 }
 
 interface DataTableProps {
@@ -55,7 +56,9 @@ interface DataTableProps {
     initialRowsPerPage?: number;
     airports?: { id: number; name: string }[];
     federalDistricts?: { id: number; name: string }[];
+    flights?: { id: number; flightNumber: string }[];
     services?: { id: number; name: string; cost: number }[];
+    ticketTypes?: TicketType[];
 }
 
 const DataTable: React.FC<DataTableProps> = ({
@@ -70,7 +73,9 @@ const DataTable: React.FC<DataTableProps> = ({
     rowsPerPageOptions = Array.from({ length: 51 }, (_, i) => i),
     airports = [],
     federalDistricts = [],
+    flights = [],
     services = [],
+    ticketTypes = [],
 }) => {
     const { rowsPerPage: settingsRowsPerPage, updateTime } = useSettingsStore();
     const { t } = useTranslation();
@@ -80,6 +85,9 @@ const DataTable: React.FC<DataTableProps> = ({
     const [sortBy, setSortBy] = useState<string | null>(initialSortBy);
     const [descending, setDescending] = useState<boolean>(initialDescending);
     const [confirmDelete, setConfirmDelete] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
+    const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+    const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
+    const [dialogItem, setDialogItem] = useState<any>({});
     const [editDialog, setEditDialog] = useState<{ open: boolean; item: any | null }>({ open: false, item: null });
     const [addDialog, setAddDialog] = useState<{ open: boolean; item: any }>({ open: false, item: {} });
     const [error, setError] = useState<string | null>(null);
@@ -154,17 +162,18 @@ const DataTable: React.FC<DataTableProps> = ({
         if (Array.isArray(updatedItem.services)) {
             updatedItem.services = updatedItem.services.map((service: any) => service.serviceId);
         }
-        setEditItem(updatedItem);
-        setEditDialog({ open: true, item: updatedItem });
+        setDialogItem(updatedItem);
+        setDialogMode('edit');
+        setDialogOpen(true);
     };
+
 
     const handleEditSave = async () => {
         if (editItem) {
             try {
                 await updateItem(editItem);
-                setData(
-                    data.map((item) => (item.id === editItem.id ? editItem : item))
-                );
+                const data = await fetchData(sortBy, descending, page + 1, rowsPerPage, filtersState);
+                setData(data);
             } catch (err: any) {
                 setError(err.response?.data || err.message);
             }
@@ -174,14 +183,35 @@ const DataTable: React.FC<DataTableProps> = ({
     };
 
     const handleAddOpen = () => {
-        setAddDialog({ open: true, item: {} });
+        setDialogMode('add');
+        setDialogItem({});
+        setDialogOpen(true);
+    };
+
+    const handleDialogSave = async () => {
+        try {
+            if (dialogMode === 'add') {
+                await addItem(dialogItem);
+            } else {
+                await updateItem(dialogItem);
+            }
+            const data = await fetchData(sortBy, descending, page + 1, rowsPerPage, filtersState);
+            setData(data);
+            setDialogOpen(false);
+        } catch (err: any) {
+            setError(err.response?.data || err.message);
+        }
+    };
+
+    const handleDialogChange = (field: string, value: any) => {
+        setDialogItem({ ...dialogItem, [field]: value });
     };
 
     const handleAddSave = async () => {
         try {
-            const newItem = await addItem(addDialog.item);
-            await data.push(newItem);
-            setData(data.map((i) => (i.id === addDialog.item.id ? addDialog.item : i)));
+            await addItem(addDialog.item);
+            const data = await fetchData(sortBy, descending, page + 1, rowsPerPage, filtersState);
+            setData(data);
             setAddDialog({ open: false, item: {} });
         } catch (err: any) {
             setError(err.response?.data || err.message);
@@ -238,6 +268,129 @@ const DataTable: React.FC<DataTableProps> = ({
         return '';
     };
 
+    const getFlightNumber = (id: number) => {
+
+        const foundFlight = flights.find((flight) => flight.id === id);
+        return foundFlight ? foundFlight.flightNumber : 'N/A';
+
+    };
+
+    const getTicketTypeName = (id: number) => {
+
+        const foundTicketType = ticketTypes.find((ticketType) => ticketType.id === id);
+        return foundTicketType ? foundTicketType.name : 'N/A';
+
+    };
+
+    const getFilterComponent = (col, value, onChange, t, dialog) => {
+        const handleChange = (newValue) => {
+            // Если значение пустое, установить в null для типов 'select' и 'date'
+            if ((col.type === 'select' || col.type === 'date') && (!newValue || newValue === '')) {
+                onChange(col.id, null);
+            } else {
+                onChange(col.id, newValue);
+            }
+        };
+    
+        switch (col.type) {
+            case 'date':
+                return (
+                    <LocalizationProvider dateAdapter={AdapterDateFns} key={col.id}>
+                        <DateTimePicker
+                            label={t(col.label)}
+                            value={value || null}
+                            onChange={handleChange}
+                            ampm={false}
+                            format="dd-MM-yyyy HH:mm"
+                            sx={{ margin: dialog ? 0 : 1, marginBottom: 2, width: dialog ? "100%" : "250px" }}
+                        />
+                    </LocalizationProvider>
+                );
+            case 'multiselect':
+                return (
+                    <FormControl key={col.id} sx={{ margin: dialog ? 0 : 1, marginBottom: 2, width: dialog ? "100%" : "250px" }}>
+                        <InputLabel>{t(col.label)}</InputLabel>
+                        <Select
+                            multiple
+                            value={value || []}
+                            onChange={(e) => {
+                                const selected = e.target.value;
+                                // Если выбрано пустое значение, установить в пустой массив
+                                if (selected.length === 0) {
+                                    onChange(col.id, []);
+                                } else {
+                                    onChange(col.id, selected);
+                                }
+                            }}
+                            renderValue={(selected) =>
+                                (selected as number[])
+                                    .map((id) => services.find((service) => service.id === id)?.name || '')
+                                    .join(', ')
+                            }
+                        >
+                            {services.map((service) => (
+                                <MenuItem key={service.id} value={service.id}>
+                                    <Checkbox checked={value?.includes(service.id) || false} />
+                                    <ListItemText primary={service.name} />
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                );
+            case 'select':
+                return (
+                    <FormControl key={col.id} sx={{ margin: dialog ? 0 : 1, marginBottom: 2, width: dialog ? "100%" : "250px" }}>
+                        <InputLabel>{t(col.label)}</InputLabel>
+                        <Select
+                            value={value !== undefined ? value : ''}
+                            onChange={(e) => {
+                                const selected = e.target.value;
+                                if (!selected) {
+                                    onChange(col.id, null);
+                                } else {
+                                    onChange(col.id, selected);
+                                }
+                            }}
+                        >
+                            <MenuItem value="">
+                                <em>{t("None")}</em>
+                            </MenuItem>
+                            {(col.id === 'airportId'
+                                ? airports
+                                : col.id === 'flightId'
+                                    ? flights
+                                    : col.id === "ticketType"
+                                        ? ticketTypes
+                                        : federalDistricts).map((item) => (
+                                            <MenuItem key={item.id} value={item.id}>
+                                                {item.name || item.flightNumber}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            );
+            default:
+                return (
+                    <TextField
+                        key={col.id}
+                        label={t(col.label)}
+                        value={value !== undefined ? value : ''}
+                        onChange={(e) => {
+                            const newValue = e.target.value;
+                            // Если поле пустое, установить в null
+                            if (newValue === '') {
+                                onChange(col.id, null);
+                            } else {
+                                onChange(col.id, newValue);
+                            }
+                        }}
+                        sx={{ margin: dialog ? 0 : 1, marginBottom: 2, width: dialog ? "100%" : "250px" }}
+                        type={col.type === 'number' ? 'number' : 'text'}
+                    />
+                );
+        }
+    };
+
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <TableContainer component={Paper}>
@@ -258,82 +411,7 @@ const DataTable: React.FC<DataTableProps> = ({
                         {columns
                             .filter((col) => col.id !== 'actions' && col.id !== 'id')
                             .map((col) => (
-                                col.type === 'date' ? (
-                                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                        <DateTimePicker
-                                            label={t(`filterBy${col.label}`)}
-                                            value={filtersState[col.id] || null}
-                                            onChange={(newValue) => handleFilterChange(col.id, newValue)}
-                                            ampm={false}
-                                            format="dd-MM-yyyy HH:mm"
-                                            sx={{ margin: "10px" }}
-                                        />
-                                    </LocalizationProvider>
-                                ) : col.id === 'services' ? (
-                                    <FormControl key={col.id} sx={{ margin: "10px", width: "250px" }}>
-                                        <InputLabel>{t(`filterBy${col.label}`)}</InputLabel>
-                                        <Select
-                                            multiple
-                                            value={filtersState[col.id] || []}
-                                            onChange={(e) => {
-                                                const selectedServices = e.target.value as number[];
-                                                handleFilterChange(col.id, selectedServices);
-                                            }}
-                                            renderValue={(selected) =>
-                                                (selected as number[])
-                                                    .map((id) => services.find((service) => service.id === id)?.name || '')
-                                                    .join(', ')
-                                            }
-                                        >
-                                            {services.map((service) => (
-                                                <MenuItem key={service.id} value={service.id}>
-                                                    <Checkbox
-                                                        checked={filtersState[col.id]?.includes(service.id) || false}
-                                                    />
-                                                    <ListItemText primary={service.name} />
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                ) : col.id === 'airportId' || col.id === 'federalDistrictId' ? (
-                                    <FormControl key={col.id} sx={{ margin: "10px", width: "250px" }}>
-                                        <InputLabel>{t(`filterBy${col.label}`)}</InputLabel>
-                                        <Select
-                                            value={filtersState[col.id] || ''}
-                                            onChange={(e) => handleFilterChange(col.id, e.target.value)}
-                                        >
-                                            <MenuItem value="">
-                                                <em>{t("None")}</em>
-                                            </MenuItem>
-                                            {(col.id === 'airportId' ? airports : federalDistricts).map((item) => (
-                                                <MenuItem key={item.id} value={item.id}>
-                                                    {item.name}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                ) : col.type === "number" ? (
-                                    <TextField
-                                        key={col.id}
-                                        label={t(`filterBy${col.label}`)}
-                                        value={filtersState[col.id] || ''}
-                                        onChange={(e) => handleFilterChange(col.id, e.target.value)}
-                                        variant="outlined"
-                                        size="medium"
-                                        style={{ margin: "10px" }}
-                                        type='number'
-                                    />
-                                ) : (
-                                    <TextField
-                                        key={col.id}
-                                        label={t(`filterBy${col.label}`)}
-                                        value={filtersState[col.id] || ''}
-                                        onChange={(e) => handleFilterChange(col.id, e.target.value)}
-                                        variant="outlined"
-                                        size="medium"
-                                        style={{ margin: "10px" }}
-                                    />
-                                )
+                                getFilterComponent(col, filtersState[col.id], handleFilterChange, t, false)
                             ))}
                     </div>
                 </div>
@@ -407,9 +485,14 @@ const DataTable: React.FC<DataTableProps> = ({
                                                                 ? getAirportName(item[col.id])
                                                                 : col.id === 'federalDistrictId'
                                                                     ? getFederalDistrictName(item[col.id])
-                                                                    : item[col.id] !== undefined && item[col.id] !== null
-                                                                        ? item[col.id]
-                                                                        : 'N/A'
+                                                                    : col.id === 'flightId'
+                                                                        ? getFlightNumber(item[col.id])
+                                                                        : col.id === 'ticketType'
+                                                                            ? getTicketTypeName(item[col.id])
+                                                                            : item[col.id] !== undefined && item[col.id] !== null
+                                                                                ? item[col.id]
+                                                                                : 'N/A'
+
                                                 }
                                             </TableCell>
                                         ))}
@@ -438,102 +521,20 @@ const DataTable: React.FC<DataTableProps> = ({
                     onRowsPerPageChange={handleRowsPerPageChange}
                 />
 
-                <Dialog open={addDialog.open} onClose={() => setAddDialog({ open: false, item: {} })}>
-                    <DialogTitle>{t("addItem")}</DialogTitle>
+                <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+                    <DialogTitle>{dialogMode === 'add' ? t("addItem") : t("editItem")}</DialogTitle>
                     <DialogContent style={{ padding: "20px" }}>
                         {columns
                             .filter((col) => col.id !== 'id' && col.id !== 'actions')
                             .map((col) => (
-                                col.type === 'date' ? (
-                                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                        <DateTimePicker
-                                            label={t(col.label)}
-                                            value={addDialog.item[col.id] || null}
-                                            onChange={(newValue) => {
-                                                setAddDialog({
-                                                    ...addDialog,
-                                                    item: { ...addDialog.item, [col.id]: newValue },
-                                                });
-                                            }}
-                                            ampm={false}
-                                            format="dd-MM-yyyy HH:mm"
-                                            sx={{ marginBottom: 2, width: "100%" }}
-                                        />
-                                    </LocalizationProvider>
-                                ) : col.id === 'services' ? (
-                                    <FormControl key={col.id} sx={{ marginBottom: 2, width: "100%" }}>
-                                        <InputLabel>{t(col.label)}</InputLabel>
-                                        <Select
-                                            multiple
-                                            value={addDialog.item.services || []}
-                                            onChange={(e) => {
-                                                const selectedServices = e.target.value as number[];
-                                                setAddDialog({
-                                                    ...addDialog,
-                                                    item: {
-                                                        ...addDialog.item,
-                                                        services: selectedServices,
-                                                    },
-                                                });
-                                            }}
-                                            renderValue={(selected) =>
-                                                (selected as number[])
-                                                    .map((id) => services.find((service) => service.id === id)?.name || '')
-                                                    .join(', ')
-                                            }
-                                        >
-                                            {services.map((service) => (
-                                                <MenuItem key={service.id} value={service.id}>
-                                                    <Checkbox
-                                                        checked={addDialog.item.services?.includes(service.id) || false}
-                                                    />
-                                                    <ListItemText primary={service.name} />
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                ) : col.id === 'airportId' || col.id === 'federalDistrictId' ? (
-                                    <FormControl key={col.id} sx={{ marginBottom: 2, width: "100%" }}>
-                                        <InputLabel>{t(col.label)}</InputLabel>
-                                        <Select
-                                            value={addDialog.item[col.id] || ''}
-                                            onChange={(e) => setAddDialog({
-                                                ...addDialog,
-                                                item: { ...addDialog.item, [col.id]: e.target.value },
-                                            })}
-                                        >
-                                            {(col.id === 'airportId' ? airports : federalDistricts).map((item) => (
-                                                <MenuItem key={item.id} value={item.id}>
-                                                    {item.name}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                ) : (
-                                    <TextField
-                                        key={col.id}
-                                        label={t(col.label)}
-                                        fullWidth
-                                        value={addDialog.item[col.id] || ''}
-                                        onChange={(e) => setAddDialog({
-                                            ...addDialog,
-                                            item: { ...addDialog.item, [col.id]: e.target.value },
-                                        })}
-                                        sx={{ marginBottom: 2 }}
-                                    />
-                                )
+                                getFilterComponent(col, dialogItem[col.id], handleDialogChange, t, true)
                             ))}
                     </DialogContent>
                     <DialogActions>
-                        <Button
-                            onClick={() =>
-                                setAddDialog({ open: false, item: {} })
-                            }
-                            color="primary"
-                        >
+                        <Button onClick={() => setDialogOpen(false)} color="primary">
                             {t("cancel")}
                         </Button>
-                        <Button onClick={handleAddSave} color="primary">
+                        <Button onClick={handleDialogSave} color="primary" disabled={!dialogItem}>
                             {t("save")}
                         </Button>
                     </DialogActions>
@@ -550,94 +551,6 @@ const DataTable: React.FC<DataTableProps> = ({
                         </Button>
                         <Button onClick={handleDelete} color="error">
                             {t("delete")}
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
-                <Dialog open={editDialog.open} onClose={() => setEditDialog({ open: false, item: null })}>
-                    <DialogTitle>{t("editItem")}</DialogTitle>
-                    <DialogContent style={{ padding: "20px" }}>
-                        {editDialog.item ? (
-                            <>
-                                {columns
-                                    .filter((col) => col.id !== 'id' && col.id !== 'actions')
-                                    .map((col) => (
-                                        col.type === 'date' ? (
-                                            <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                                <DateTimePicker
-                                                    label={t(col.label)}
-                                                    value={editItem[col.id] || null}
-                                                    onChange={(newValue) => {
-                                                        handleEditChange(col.id, newValue);
-                                                    }}
-                                                    format="dd-MM-yyyy HH:mm"
-                                                    ampm={false}
-                                                    sx={{ marginBottom: 2, width: "100%" }}
-                                                />
-                                            </LocalizationProvider>
-                                        ) : col.id === 'services' ? (
-                                            <FormControl key={col.id} sx={{ marginBottom: 2, width: "100%" }}>
-                                                <InputLabel>{t(col.label)}</InputLabel>
-                                                <Select
-                                                    multiple
-                                                    value={editItem.services || []}
-                                                    onChange={(e) => {
-                                                        const selectedServices = e.target.value as number[];
-                                                        handleEditChange(col.id, selectedServices);
-                                                    }}
-                                                    renderValue={(selected) =>
-                                                        (selected as number[])
-                                                            .map((id) => services.find((service) => service.id === id)?.name || '')
-                                                            .join(', ')
-                                                    }
-                                                >
-                                                    {services.map((service) => (
-                                                        <MenuItem key={service.id} value={service.id}>
-                                                            <Checkbox
-                                                                checked={editItem.services?.includes(service.id) || false}
-                                                            />
-                                                            <ListItemText primary={service.name} />
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </FormControl>
-                                        ) : col.id === 'airportId' || col.id === 'federalDistrictId' ? (
-                                            <FormControl key={col.id} sx={{ marginBottom: 2, width: "100%" }}>
-                                                <InputLabel>{t(col.label)}</InputLabel>
-                                                <Select
-                                                    value={editItem[col.id] || ''}
-                                                    onChange={(e) => handleEditChange(col.id, e.target.value)}
-                                                >
-                                                    {(col.id === 'airportId' ? airports : federalDistricts).map((item) => (
-                                                        <MenuItem key={item.id} value={item.id}>
-                                                            {item.name}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </FormControl>
-                                        ) : (
-                                            <TextField
-                                                key={col.id}
-                                                label={t(col.label)}
-                                                fullWidth
-                                                value={editItem[col.id] || ''}
-                                                onChange={(e) => handleEditChange(col.id, e.target.value)}
-                                                sx={{ marginBottom: 2 }}
-                                            />
-                                        )
-                                    ))}
-                            </>
-                        ) : (
-                            <div>Loading...</div>
-                        )
-                        }
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setEditDialog({ open: false, item: null })}>
-                            {t("cancel")}
-                        </Button>
-                        <Button onClick={handleEditSave} color="primary" disabled={!editItem}>
-                            {t("save")}
                         </Button>
                     </DialogActions>
                 </Dialog>

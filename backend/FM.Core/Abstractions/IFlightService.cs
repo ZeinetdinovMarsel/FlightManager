@@ -11,7 +11,7 @@ public interface IFlightService
         DateTime? departureTimeFilter = null,
         DateTime? arrivalTimeFilter = null,
         int? availableSeatsFilter = null,
-        int? airoirtIdFilter = null
+        int? airportIdFilter = null
         );
     Task<FlightModel?> GetByIdAsync(int id);
     Task<bool> UpdateAsync(int id, string flightNumber, string destination, DateTime departureTime, DateTime arrivalTime, int availableSeats, string airplanePhotoUrl, int airportId);

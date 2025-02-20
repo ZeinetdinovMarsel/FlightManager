@@ -25,12 +25,12 @@ public static class FlightEndpoints
             DateTime? departureTimeFilter = null,
             DateTime? arrivalTimeFilter = null,
             int? availableSeatsFilter = null,
-            int? airoirtIdFilter = null
+            int? airportIdFilter = null
         )
     {
         try
         {
-            var flights = await service.GetAllAsync(sortBy, descending, page, pageSize, flightNumberFilter, destinationFilter, departureTimeFilter, arrivalTimeFilter, availableSeatsFilter, airoirtIdFilter);
+            var flights = await service.GetAllAsync(sortBy, descending, page, pageSize, flightNumberFilter, destinationFilter, departureTimeFilter, arrivalTimeFilter, availableSeatsFilter, airportIdFilter);
             return Results.Ok(flights);
         }
         catch (Exception ex)

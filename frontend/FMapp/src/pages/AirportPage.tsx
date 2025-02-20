@@ -13,7 +13,7 @@ const AirportPage: React.FC = () => {
         { id: 'id', label: 'id', sortable: true },
         { id: 'name', label: 'airports', sortable: true },
         { id: 'city', label: 'city', sortable: true },
-        { id: 'federalDistrictId', label: 'federalDistrictId', sortable: true },
+        { id: 'federalDistrictId', label: 'federalDistrictId', sortable: true, type: 'select' },
     ];
 
     const fetchAirports = async () => {

@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { getTickets, deleteTicket, updateTicket, createTicket, TicketRequest } from '../api/ticket';
+import { getTickets, deleteTicket, updateTicket, createTicket, TicketRequest, TicketType, getTicketTypes } from '../api/ticket';
 import DataTable from '../components/DataTable';
 import { getServices } from '../api/service';
-import { Service } from '../api/service'; // Предполагается, что у вас есть интерфейс Service
+import { Service } from '../api/service';
+import { Flight, getFlights } from '../api/flight';
 
 const TicketPage: React.FC = () => {
     const [services, setServices] = useState<Service[]>([]);
+    const [flights, setFlights] = useState<Flight[]>([]);
+    const [ticketTypes, setTicketTypes] = useState<TicketType[]>();
 
-    // Определение столбцов таблицы
     const columns = [
-        { id: 'id', label: 'ID', sortable: true },
-        { id: 'ticketType', label: 'Тип билета', sortable: true },
-        { id: 'price', label: 'Цена', sortable: true },
-        { id: 'seat', label: 'Место', sortable: true },
-        { id: 'flightId', label: 'ID рейса', sortable: true },
+        { id: 'id', label: 'id', sortable: true },
+        { id: 'ticketType', label: 'ticketType', sortable: true, type: 'select' },
+        { id: 'price', label: 'price', sortable: true, type: 'number' },
+        { id: 'seat', label: 'seat', type: 'number', sortable: true },
+        { id: 'flightId', label: 'flightNumber', sortable: true, type: 'select' },
         {
             id: 'services',
-            label: 'Услуги',
+            label: 'services',
             sortable: true,
             render: (services: any[]) => {
                 if (Array.isArray(services)) {
@@ -24,26 +26,43 @@ const TicketPage: React.FC = () => {
                 }
                 return '';
             },
-            type: 'text',
+            type: 'multiselect',
         },
     ];
 
-    // Функция для получения услуг
     const fetchServices = async () => {
         try {
             const data = await getServices();
             setServices(data);
         } catch (error) {
-            console.error('Ошибка при получении услуг:', error);
+            console.error(error);
         }
     };
 
-    // Использование useEffect для получения услуг при монтировании компонента
+    const fetchFlights = async () => {
+        try {
+            const data = await getFlights();
+            setFlights(data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchTicketTypes = async () => {
+        try {
+            const data = await getTicketTypes();
+            setTicketTypes(data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     useEffect(() => {
         fetchServices();
+        fetchFlights();
+        fetchTicketTypes();
     }, []);
 
-    // Функция для получения данных билетов
     const fetchData = async (sortBy: string, descending: boolean, page: number, pageSize: number, filters: any) => {
         try {
             const data = await getTickets(
@@ -59,16 +78,14 @@ const TicketPage: React.FC = () => {
             );
             return data;
         } catch (error) {
-            console.error('Ошибка при получении билетов:', error);
             return { tickets: [], total: 0 };
         }
     };
 
-    // Функция для добавления нового билета
     const addItem = async (item: any) => {
         try {
             const ticket: TicketRequest = {
-                ticketType: parseInt(item.ticketType,10),
+                ticketType: parseInt(item.ticketType, 10),
                 price: item.price,
                 seat: item.seat,
                 flightId: item.flightId,
@@ -78,16 +95,14 @@ const TicketPage: React.FC = () => {
             const newTicket = await createTicket(ticket);
             return newTicket;
         } catch (error) {
-            console.error('Ошибка при добавлении билета:', error);
             throw error;
         }
     };
 
-    // Функция для обновления существующего билета
     const updateItem = async (item: any) => {
         try {
             const ticket: TicketRequest = {
-                ticketType: parseInt(item.ticketType,10),
+                ticketType: parseInt(item.ticketType, 10),
                 price: item.price,
                 seat: item.seat,
                 flightId: item.flightId,
@@ -96,17 +111,14 @@ const TicketPage: React.FC = () => {
             const updatedTicket = await updateTicket(item.id, ticket);
             return updatedTicket;
         } catch (error) {
-            console.error('Ошибка при обновлении билета:', error);
             throw error;
         }
     };
 
-    // Функция для удаления билета
     const deleteItem = async (id: number) => {
         try {
             await deleteTicket(id);
         } catch (error) {
-            console.error('Ошибка при удалении билета:', error);
             throw error;
         }
     };
@@ -123,11 +135,14 @@ const TicketPage: React.FC = () => {
                 price: null,
                 seat: '',
                 flightId: null,
-                services:[],
+                services: [],
             }}
             initialSortBy="id"
             initialDescending={false}
             services={services}
+            flights={flights}
+            ticketTypes={ticketTypes}
+
         />
     );
 };

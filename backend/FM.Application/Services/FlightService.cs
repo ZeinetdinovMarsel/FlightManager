@@ -18,10 +18,10 @@ public class FlightService : IFlightService
         DateTime? departureTimeFilter = null,
         DateTime? arrivalTimeFilter = null,
         int? availableSeatsFilter = null,
-        int? airoirtIdFilter = null
+        int? airportIdFilter = null
         )
     {
-        return await _flightRepository.GetAllAsync(sortBy, descending, page, pageSize, flightNumberFilter,destinationFilter,departureTimeFilter,arrivalTimeFilter,availableSeatsFilter,airoirtIdFilter);
+        return await _flightRepository.GetAllAsync(sortBy, descending, page, pageSize, flightNumberFilter,destinationFilter,departureTimeFilter,arrivalTimeFilter,availableSeatsFilter, airportIdFilter);
     }
 
     public async Task<FlightModel?> GetByIdAsync(int id)

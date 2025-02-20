@@ -27,6 +27,11 @@ export interface TicketService {
     serviceId: number;
 }
 
+export interface TicketType {
+    id: number;
+    name: string;
+}
+
 export const getTickets = async (
     sortBy?: string,
     descending?: boolean,
@@ -39,7 +44,7 @@ export const getTickets = async (
     serviceIdsFilter?: number[],
 ) => {
     const response = await axiosInstance.get(`${API_URL}tickets`, {
-        params: { sortBy, descending, page, pageSize, ticketTypeFilter, priceFilter, seatFilter, flightIdFilter,serviceIdsFilter },
+        params: { sortBy, descending, page, pageSize, ticketTypeFilter, priceFilter, seatFilter, flightIdFilter, serviceIdsFilter },
     });
     return response.data;
 };
@@ -62,5 +67,10 @@ export const updateTicket = async (id: number, ticket: TicketRequest) => {
 
 export const deleteTicket = async (id: number) => {
     const response = await axiosInstance.delete(`${API_URL}tickets/${id}`);
+    return response.data;
+};
+
+export const getTicketTypes = async () => {
+    const response = await axiosInstance.get(`${API_URL}ticket-types`);
     return response.data;
 };

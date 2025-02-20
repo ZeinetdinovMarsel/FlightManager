@@ -1,6 +1,5 @@
 // src/pages/FlightsPage.tsx
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { getFlights, deleteFlight, updateFlight, createFlight } from '../api/flight';
 import DataTable from '../components/DataTable';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -17,7 +16,7 @@ const FlightsPage: React.FC = () => {
         { id: 'arrivalTime', label: 'arrivalTime', sortable: true, type: 'date' },
         { id: 'availableSeats', label: 'availableSeats', sortable: true, type: 'number' },
         { id: 'airplanePhotoUrl', label: 'airplanePhotoUrl', sortable: true },
-        { id: 'airportId', label: 'airportId', sortable: true },
+        { id: 'airportId', label: 'airportId', sortable: true, type: 'select' },
     ];
 
     const fetchAirports = async () => {

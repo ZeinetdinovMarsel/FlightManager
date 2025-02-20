@@ -14,7 +14,7 @@ public static class TicketEndpoints
         app.MapPost("/tickets", CreateTicket);
         app.MapPut("/tickets/{id}", UpdateTicket);
         app.MapDelete("/tickets/{id}", DeleteTicket);
-
+        app.MapGet("/ticket-types", GetTicketTypes);
         return app;
     }
 
@@ -105,6 +105,27 @@ public static class TicketEndpoints
         {
             var result = await service.DeleteTicketAsync(id);
             return result ? Results.Ok("Билет удалён") : Results.NotFound();
+        }
+        catch (Exception ex)
+        {
+            return Results.BadRequest(ex.Message);
+        }
+    }
+
+    private static IResult GetTicketTypes()
+    {
+        try
+        {
+            var ticketTypes = Enum.GetValues(typeof(TicketType))
+                                   .Cast<TicketType>()
+                                   .Select(t => new
+                                   {
+                                       Id = (int)t,
+                                       Name = t.ToString()
+                                   })
+                                   .ToList();
+
+            return Results.Ok(ticketTypes);
         }
         catch (Exception ex)
         {

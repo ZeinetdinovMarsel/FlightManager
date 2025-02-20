@@ -20,7 +20,7 @@ public class FlightRepository : IFlightRepository
         DateTime? departureTimeFilter = null,
         DateTime? arrivalTimeFilter = null,
         int? availableSeatsFilter = null,
-        int? airoirtIdFilter = null
+        int? airportIdFilter = null
         )
     {
         var query = _context.Flights.Include(f => f.Airport).AsQueryable();
@@ -50,9 +50,9 @@ public class FlightRepository : IFlightRepository
             query = query.Where(f => f.AvailableSeats == availableSeatsFilter.Value);
         }
 
-        if (airoirtIdFilter.HasValue)
+        if (airportIdFilter.HasValue)
         {
-            query = query.Where(f => f.AirportId == airoirtIdFilter.Value);
+            query = query.Where(f => f.AirportId == airportIdFilter.Value);
         }
 
         if (!string.IsNullOrEmpty(sortBy))

@@ -3,7 +3,7 @@
 import axiosInstance from "../utils/axiosInstance";
 import { API_URL } from "../utils/axiosInstance";
 
-interface Flight {
+export interface Flight {
     id: number;
     flightNumber: string;
     destination: string;
