@@ -25,7 +25,9 @@ public class AirportEndpointsTests
             It.IsAny<bool>(),
             It.IsAny<int>(),
             It.IsAny<int>(),
-            It.IsAny<string>()))
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            null))
             .ReturnsAsync(airports);
 
         var result = await AirportEndpoints.GetAirports(_airportServiceMock.Object);
@@ -41,7 +43,9 @@ public class AirportEndpointsTests
         const bool descending = true;
         const int page = 2;
         const int pageSize = 20;
-        const string filter = "test";
+        const string cityFilter = "test";
+        const string nameFilter = "test";
+        const int federalDistrictFilter = 1;
 
         await AirportEndpoints.GetAirports(
             _airportServiceMock.Object,
@@ -49,14 +53,18 @@ public class AirportEndpointsTests
             descending,
             page,
             pageSize,
-            filter);
+            cityFilter,
+            nameFilter,
+            federalDistrictFilter);
 
         _airportServiceMock.Verify(x => x.GetAllAsync(
             sortBy,
             descending,
             page,
             pageSize,
-            filter),
+            cityFilter,
+            nameFilter,
+            federalDistrictFilter),
             Times.Once);
     }
 
@@ -210,7 +218,9 @@ public class AirportEndpointsTests
             It.IsAny<bool>(),
             It.IsAny<int>(),
             It.IsAny<int>(),
-            It.IsAny<string>()))
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            null))
             .ThrowsAsync(new Exception(errorMessage));
 
         var result = await AirportEndpoints.GetAirports(_airportServiceMock.Object);
