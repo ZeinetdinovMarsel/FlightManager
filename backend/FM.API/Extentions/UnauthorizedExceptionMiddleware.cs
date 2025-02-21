@@ -37,22 +37,18 @@ public class UnauthorizedExceptionMiddleware
                     context.Session.SetString("Token", responseData.Token);
                     context.Session.SetString("RefreshToken", responseData.RefreshToken);
 
-                    // Обновляем заголовки
                     context.Request.Headers["Authorization"] = $"Bearer {responseData.Token}";
 
-                    // Повторяем оригинальный запрос
                     await _next(context);
                     return;
                 }
             }
 
-            // Если обновление токена не удалось, перенаправляем на страницу входа
             context.Response.Redirect("/login");
             return;
         }
         catch (Exception ex)
         {
-            // Обработка других исключений
             context.Response.StatusCode = 500;
             await context.Response.WriteAsync("An unexpected error occurred.");
         }
